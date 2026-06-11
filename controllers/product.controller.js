@@ -3,13 +3,21 @@ const { Product, Product_variant, Category, Brand } = require("../models/schema"
 // 1. LẤY TẤT CẢ SẢN PHẨM
 exports.getAllProducts = async (req, res) => {
   try {
-    const { category, brand, minPrice, maxPrice, search, page = 1, limit = 12, sort = "newest" } = req.query;
+    // Thêm 'isNew' vào destructuring từ req.query
+    const { category, brand, minPrice, maxPrice, search, page = 1, limit = 12, sort = "newest", isAI, isNew } = req.query;
 
     const filter = { Status: "on_sale" };
     if (category) filter.Category_id = category;
     if (brand) filter.Brand_id = brand;
     if (search) filter.Product_name = { $regex: search, $options: "i" };
     if (req.query.isFlashSale === 'true') filter.Is_Flash_Sale = true;
+    if (isAI === 'true') filter.Is_AI = true;
+
+    // THÊM MỚI: Logic lọc sản phẩm Mới (Không sale và không phải AI)
+    if (isNew === 'true') {
+      filter.Is_Flash_Sale = { $ne: true };
+      filter.Is_AI = { $ne: true };
+    }
     
     let products = await Product.find(filter).lean();
 
@@ -76,15 +84,15 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// 3. SẢN PHẨM NỔI BẬT
+// 3. SẢN PHẨM NỔI BẬT (Đã chuẩn hóa logic)
 exports.getFeaturedProducts = async (req, res) => {
   try {
     const products = await Product.find({
-  Is_AI: false
-})
-.sort({ Average_rating: -1 })
-.limit(8)
-.lean();
+      Status: "on_sale" // Bảo đảm sản phẩm phải đang mở bán
+    })
+    .sort({ Average_rating: -1 }) // Xếp theo đánh giá cao nhất đổ xuống
+    .limit(8)
+    .lean();
 
     const productsWithPrice = await Promise.all(
       products.map(async (product) => {
@@ -102,16 +110,9 @@ exports.getFeaturedProducts = async (req, res) => {
       })
     );
 
-    res.json({
-      success: true,
-      data: productsWithPrice
-    });
-
+    res.json({ success: true, data: productsWithPrice });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
