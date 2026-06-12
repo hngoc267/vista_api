@@ -659,33 +659,6 @@ const usersData = async () => {
       Full_name: "Nguyễn Minh Anh",
       Status: "active",
     },
-    {
-      User_id: "USR_002",
-      Username: "quochuy30",
-      Password: hashedPassword,
-      Phone_number: "0912345678",
-      Email: "quochuy@gmail.com",
-      Full_name: "Trần Quốc Huy",
-      Status: "active",
-    },
-    {
-      User_id: "USR_003",
-      Username: "lehoangnam_gamer",
-      Password: hashedPassword,
-      Phone_number: "0923456789",
-      Email: "hoangnam@gmail.com",
-      Full_name: "Lê Hoàng Nam",
-      Status: "active",
-    },
-    {
-      User_id: "USR_004",
-      Username: "admin_vista",
-      Password: await bcrypt.hash("AdminVista@2025", 10),
-      Phone_number: "0900000001",
-      Email: "admin@vista.vn",
-      Full_name: "VISTA Admin",
-      Status: "active",
-    },
   ];
 };
 
