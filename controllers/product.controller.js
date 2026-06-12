@@ -8,7 +8,21 @@ exports.getAllProducts = async (req, res) => {
 
     const filter = { Status: "on_sale" };
     if (category) filter.Category_id = category;
-    if (brand) filter.Brand_id = brand;
+    
+    // --- SỬA LẠI LOGIC LỌC THƯƠNG HIỆU Ở ĐÂY ---
+    if (brand) {
+      // 1. Tìm trong bảng Brand xem hãng (VD: 'Apple') có mã Brand_id là gì
+      // Dùng $regex 'i' để không phân biệt viết hoa viết thường (Apple hay apple đều được)
+      const brandDoc = await Brand.findOne({ Brand_name: { $regex: new RegExp(`^${brand}$`, 'i') } }).lean();
+      
+      if (brandDoc) {
+        // 2. Nếu tìm thấy, lấy mã ID để lọc sản phẩm
+        filter.Brand_id = brandDoc.Brand_id;
+      } else {
+        // 3. Nếu khách cố tình gõ sai tên hãng, ép filter tìm 1 mã ảo để trả về mảng rỗng
+        filter.Brand_id = "NOT_FOUND";
+      }
+    }
     if (search) filter.Product_name = { $regex: search, $options: "i" };
     if (req.query.isFlashSale === 'true') filter.Is_Flash_Sale = true;
     if (isAI === 'true') filter.Is_AI = true;
