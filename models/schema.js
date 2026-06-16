@@ -151,22 +151,29 @@ const CartItemSchema = new Schema(
 // ============================================================
 const VoucherSchema = new Schema(
   {
-    Voucher_id: { type: String, required: true, unique: true },
-    Discount_type: { type: String, enum: ["percent", "fixed"], required: true },
-    Discount_value: { type: Number, required: true },
-    Min_order_value: { type: Number, default: 0 },
-    Max_discount_amount: { type: Number },
-    Usage_limit: { type: Number },
-    Used_count: { type: Number, default: 0 },
-    Start_date: { type: Date, required: true },
-    End_date: { type: Date, required: true },
-    Status: {
+    code: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
+    condition: { type: String, required: true },
+    type: { type: String, enum: ["percent", "shipping"], required: true },
+    category: { type: String, enum: ["freeship", "discount"], required: true },
+    status: {
       type: String,
-      enum: ["active", "expired"],
-      default: "active",
+      enum: ["available", "used", "expiring"],
+      default: "available",
     },
+    expiry: { type: String, required: true },
+    daysLeft: { type: Number },
+    description: { type: String, default: "" },
+    benefits: [{ type: String }],
+    conditions: [{ type: String }],
+    startDate: { type: String, default: "" },
+    usageLimit: { type: String, default: "" },
+    statusText: { type: String, default: "" },
   },
-  { collection: "Voucher" }
+  {
+    collection: "Voucher",
+    timestamps: true,
+  }
 );
 
 // ============================================================
