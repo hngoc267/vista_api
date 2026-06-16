@@ -147,9 +147,9 @@ const CartItemSchema = new Schema(
 );
 
 // ============================================================
-// 9. VOUCHER — Mã giảm giá
+// 9. VOUCHER — Mã giảm giá (Phiên bản Minh Hiển)
 // ============================================================
-const VoucherSchema = new Schema(
+const VoucherSchema = new mongoose.Schema(
   {
     code: { type: String, required: true, unique: true },
     title: { type: String, required: true },
