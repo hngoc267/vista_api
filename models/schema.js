@@ -147,26 +147,26 @@ const CartItemSchema = new Schema(
 );
 
 // ============================================================
-// 9. VOUCHER — Mã giảm giá
+// 9. VOUCHER — Mã giảm giá (Phiên bản Minh Hiển)
 // ============================================================
-const VoucherSchema = new Schema(
+const VoucherSchema = new mongoose.Schema(
   {
-    Voucher_id: { type: String, required: true, unique: true },
-    Discount_type: { type: String, enum: ["percent", "fixed"], required: true },
-    Discount_value: { type: Number, required: true },
-    Min_order_value: { type: Number, default: 0 },
-    Max_discount_amount: { type: Number },
-    Usage_limit: { type: Number },
-    Used_count: { type: Number, default: 0 },
-    Start_date: { type: Date, required: true },
-    End_date: { type: Date, required: true },
-    Status: {
-      type: String,
-      enum: ["active", "expired"],
-      default: "active",
-    },
+    code: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
+    condition: { type: String },
+    type: { type: String, enum: ['percent', 'shipping'], required: true },
+    category: { type: String, enum: ['freeship', 'discount'], required: true },
+    status: { type: String, enum: ['available', 'used', 'expiring'], default: 'available' },
+    expiry: { type: String },
+    expiresInDays: { type: Number },
+    description: { type: String },
+    benefits: [{ type: String }],
+    conditions: [{ type: String }],
+    startDate: { type: String },
+    usageLimit: { type: String },
+    statusText: { type: String }
   },
-  { collection: "Voucher" }
+  { collection: "Voucher", timestamps: true }
 );
 
 // ============================================================

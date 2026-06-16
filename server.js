@@ -31,3 +31,7 @@ app.use("/api/auth", authRoutes);
 
 const cartRoutes = require("./routes/cart.routes");
 app.use("/api/cart", cartRoutes);
+
+// THÊM MỚI Ở ĐÂY: Đăng ký API cho Voucher
+const voucherRoutes = require("./routes/voucher.routes");
+app.use("/api/vouchers", voucherRoutes);
