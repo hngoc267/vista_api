@@ -673,7 +673,7 @@ const vouchersData = [
     type: 'percent',
     category: 'discount',
     status: 'expiring',
-    expiresInDays: 4,
+    expiry: '20/06/2026', // Đã sửa thành expiry
     description: 'Giảm 10% toàn đơn hàng',
     benefits: ['Giảm 10% giá trị đơn hàng.', 'Giảm tối đa 500.000đ.'],
     conditions: ['Đơn hàng từ 5.000.000đ.', 'Áp dụng cho tất cả sản phẩm trên hệ thống.'],
@@ -688,7 +688,7 @@ const vouchersData = [
     type: 'shipping',
     category: 'freeship',
     status: 'expiring',
-    expiresInDays: 4,
+    expiry: '20/06/2026', // Đã sửa thành expiry
     description: 'Giảm 30.000đ phí vận chuyển',
     benefits: ['Giảm trực tiếp 30.000đ phí vận chuyển.', 'Áp dụng khi thanh toán đơn hàng hợp lệ.'],
     conditions: ['Đơn hàng từ 2.000.000đ.', 'Áp dụng cho đơn giao hàng toàn quốc.'],
@@ -748,7 +748,7 @@ const vouchersData = [
     type: 'percent',
     category: 'discount',
     status: 'expiring',
-    expiresInDays: 1,
+    expiry: '17/06/2026', // Đã sửa thành expiry
     description: 'Giảm 15% chỉ trong hôm nay',
     benefits: ['Giảm 15% giá trị đơn hàng.', 'Giảm tối đa 700.000đ.'],
     conditions: ['Áp dụng cho đơn hàng hợp lệ.', 'Không áp dụng đồng thời với mã giảm giá khác.'],
