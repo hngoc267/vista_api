@@ -153,20 +153,27 @@ const VoucherSchema = new mongoose.Schema(
   {
     code: { type: String, required: true, unique: true },
     title: { type: String, required: true },
-    condition: { type: String },
-    type: { type: String, enum: ['percent', 'shipping'], required: true },
-    category: { type: String, enum: ['freeship', 'discount'], required: true },
-    status: { type: String, enum: ['available', 'used', 'expiring'], default: 'available' },
-    expiry: { type: String },
-    expiresInDays: { type: Number },
-    description: { type: String },
+    condition: { type: String, required: true },
+    type: { type: String, enum: ["percent", "shipping"], required: true },
+    category: { type: String, enum: ["freeship", "discount"], required: true },
+    status: {
+      type: String,
+      enum: ["available", "used", "expiring"],
+      default: "available",
+    },
+    expiry: { type: String, required: true },
+    daysLeft: { type: Number },
+    description: { type: String, default: "" },
     benefits: [{ type: String }],
     conditions: [{ type: String }],
-    startDate: { type: String },
-    usageLimit: { type: String },
-    statusText: { type: String }
+    startDate: { type: String, default: "" },
+    usageLimit: { type: String, default: "" },
+    statusText: { type: String, default: "" },
   },
-  { collection: "Voucher", timestamps: true }
+  {
+    collection: "Voucher",
+    timestamps: true,
+  }
 );
 
 // ============================================================
