@@ -18,6 +18,11 @@ function normalizeText(value) {
     .replace(/đ/g, "d");
 }
 
+function calculateProductFinalPrice(originalPrice, product) {
+  const discount = Math.max(0, Math.min(100, Number(product?.Discount) || 0));
+  return Math.round((Number(originalPrice) || 0) * (100 - discount) / 100);
+}
+
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -44,6 +49,39 @@ function parseVietnameseDate(value) {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function getVietnamDateParts(date = new Date()) {
+  const vietnamTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+  return {
+    day: vietnamTime.getUTCDate(),
+    month: vietnamTime.getUTCMonth() + 1,
+    year: vietnamTime.getUTCFullYear(),
+  };
+}
+
+function getDateNumber({ day, month, year }) {
+  return year * 10000 + month * 100 + day;
+}
+
+function getVoucherExpiryParts(expiry) {
+  if (!expiry) return null;
+
+  const raw = cleanString(expiry);
+  const slashParts = raw.split("/");
+  if (slashParts.length === 3) {
+    const [day, month, year] = slashParts.map((part) => Number(part));
+    if (day && month && year) {
+      return { day, month, year };
+    }
+  }
+
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return getVietnamDateParts(parsed);
+}
+
 function endOfDay(date) {
   if (!date) return null;
   const cloned = new Date(date);
@@ -52,19 +90,21 @@ function endOfDay(date) {
 }
 
 function getDaysLeft(expiry) {
-  const expiryDate = parseVietnameseDate(expiry);
-  if (!expiryDate) return null;
+  const expiryParts = getVoucherExpiryParts(expiry);
+  if (!expiryParts) return null;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  expiryDate.setHours(0, 0, 0, 0);
+  const todayParts = getVietnamDateParts();
+  const todayUtc = Date.UTC(todayParts.year, todayParts.month - 1, todayParts.day);
+  const expiryUtc = Date.UTC(expiryParts.year, expiryParts.month - 1, expiryParts.day);
 
-  return Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+  return Math.round((expiryUtc - todayUtc) / (1000 * 60 * 60 * 24));
 }
 
 function isVoucherExpired(voucher) {
-  const expiryDate = endOfDay(parseVietnameseDate(voucher?.expiry));
-  return !!expiryDate && expiryDate < new Date();
+  const expiryParts = getVoucherExpiryParts(voucher?.expiry);
+  if (!expiryParts) return false;
+
+  return getDateNumber(expiryParts) < getDateNumber(getVietnamDateParts());
 }
 
 function parseMoney(value) {
@@ -100,7 +140,6 @@ function voucherTexts(voucher) {
     ...(Array.isArray(voucher?.benefits) ? voucher.benefits : []),
     ...(Array.isArray(voucher?.conditions) ? voucher.conditions : []),
     voucher?.usageLimit,
-    voucher?.statusText,
   ].filter(Boolean);
 }
 
@@ -210,6 +249,17 @@ function hasFirstOrderRule(voucher) {
   });
 }
 
+function hasPerAccountUsageRule(voucher) {
+  return voucherTexts(voucher).some((text) => {
+    const normalized = normalizeText(text);
+    return (
+      normalized.includes("moi tai khoan") ||
+      normalized.includes("tai khoan su dung") ||
+      normalized.includes("tai khoan cua ban")
+    );
+  });
+}
+
 function detectRequiredCategoryAliases(voucher) {
   const text = normalizeText(voucherTexts(voucher).join(" "));
   const aliases = [];
@@ -233,6 +283,69 @@ function detectRequiredCategoryAliases(voucher) {
   return [...new Set(aliases)];
 }
 
+async function resolveOrderContext(orderItems, fallbackSubtotal, fallbackTotalQuantity) {
+  const normalizedItems = Array.isArray(orderItems)
+    ? orderItems
+        .map((item) => ({
+          productVariantId: cleanString(item.productVariantId || item.Product_variant_id),
+          quantity: Math.max(1, Number(item.quantity || item.Quantity) || 1),
+          clientPrice: Number(item.price || item.Price) || 0,
+        }))
+        .filter((item) => item.productVariantId)
+    : [];
+
+  if (normalizedItems.length === 0) {
+    return {
+      totalItemsPrice: Math.max(0, Number(fallbackSubtotal) || 0),
+      totalQuantity: Math.max(0, Number(fallbackTotalQuantity) || 0),
+      orderItems: [],
+    };
+  }
+
+  const variants = await Product_variant.find({
+    Product_variant_id: { $in: normalizedItems.map((item) => item.productVariantId) },
+    Status: "active",
+  }).lean();
+  const variantMap = new Map(variants.map((variant) => [variant.Product_variant_id, variant]));
+
+  if (variants.length !== normalizedItems.length) {
+    throw createVoucherError("Một số phiên bản sản phẩm không còn khả dụng.");
+  }
+
+  const productIds = [...new Set(variants.map((variant) => variant.Product_id).filter(Boolean))];
+  const products = productIds.length
+    ? await Product.find({ Product_id: { $in: productIds } }).lean()
+    : [];
+  const productMap = new Map(products.map((product) => [product.Product_id, product]));
+  const categoryIds = [...new Set(products.map((product) => product.Category_id).filter(Boolean))];
+  const categories = categoryIds.length
+    ? await Category.find({ Category_id: { $in: categoryIds } }).lean()
+    : [];
+  const categoryMap = new Map(categories.map((category) => [category.Category_id, category]));
+
+  const resolvedItems = normalizedItems.map((item) => {
+    const variant = variantMap.get(item.productVariantId);
+    const product = variant ? productMap.get(variant.Product_id) : null;
+    const category = product ? categoryMap.get(product.Category_id) : null;
+    const price = calculateProductFinalPrice(variant?.Price, product);
+
+    return {
+      productVariantId: item.productVariantId,
+      quantity: item.quantity,
+      price,
+      searchable: normalizeText(
+        `${category?.Category_name || ""} ${product?.Product_name || ""} ${variant?.Variant_name || ""}`
+      ),
+    };
+  });
+
+  return {
+    totalItemsPrice: resolvedItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    totalQuantity: resolvedItems.reduce((sum, item) => sum + item.quantity, 0),
+    orderItems: resolvedItems,
+  };
+}
+
 async function getEligibleSubtotal(voucher, orderItems, fallbackSubtotal) {
   const aliases = detectRequiredCategoryAliases(voucher);
   if (aliases.length === 0 || !Array.isArray(orderItems) || orderItems.length === 0) {
@@ -244,11 +357,25 @@ async function getEligibleSubtotal(voucher, orderItems, fallbackSubtotal) {
       productVariantId: cleanString(item.productVariantId || item.Product_variant_id),
       quantity: Math.max(1, Number(item.quantity || item.Quantity) || 1),
       price: Number(item.price || item.Price) || 0,
+      searchable: normalizeText(item.searchable),
     }))
     .filter((item) => item.productVariantId);
 
   if (normalizedItems.length === 0) {
     return fallbackSubtotal;
+  }
+
+  if (normalizedItems.every((item) => item.searchable)) {
+    const eligibleSubtotal = normalizedItems.reduce((sum, item) => {
+      const isEligible = aliases.some((alias) => item.searchable.includes(alias));
+      return isEligible ? sum + item.price * item.quantity : sum;
+    }, 0);
+
+    if (eligibleSubtotal <= 0) {
+      throw createVoucherError("Mã giảm giá không áp dụng cho sản phẩm trong đơn hàng này.");
+    }
+
+    return eligibleSubtotal;
   }
 
   const variants = await Product_variant.find({
@@ -280,6 +407,21 @@ async function getEligibleSubtotal(voucher, orderItems, fallbackSubtotal) {
   if (eligibleSubtotal <= 0) {
     throw createVoucherError("Mã giảm giá không áp dụng cho sản phẩm trong đơn hàng này.");
   }
+
+  return eligibleSubtotal;
+}
+
+function getEligibleSubtotalFromResolvedItems(voucher, orderItems, fallbackSubtotal) {
+  const aliases = detectRequiredCategoryAliases(voucher);
+  if (aliases.length === 0 || !Array.isArray(orderItems) || orderItems.length === 0) {
+    return fallbackSubtotal;
+  }
+
+  const eligibleSubtotal = orderItems.reduce((sum, item) => {
+    const searchable = normalizeText(item.searchable);
+    const isEligible = aliases.some((alias) => searchable.includes(alias));
+    return isEligible ? sum + (Number(item.price) || 0) * (Number(item.quantity) || 1) : sum;
+  }, 0);
 
   return eligibleSubtotal;
 }
@@ -319,7 +461,11 @@ async function assertVoucherCanBeUsed(voucher, { userId, totalItemsPrice, totalQ
     }
   }
 
-  if (userId && normalizeText(voucher.usageLimit).includes("moi tai khoan")) {
+  if (hasPerAccountUsageRule(voucher)) {
+    if (!userId) {
+      throw createVoucherError("Bạn cần đăng nhập để áp dụng mã giới hạn theo tài khoản.");
+    }
+
     const usedByUser = await Order.exists({
       User_id: userId,
       $or: [{ Voucher_id: voucher.code }, { Voucher_code: voucher.code }],
@@ -349,15 +495,26 @@ async function calculateVoucherDiscount({
         }).lean()
       : null);
 
+  if (!foundVoucher) {
+    await assertVoucherCanBeUsed(foundVoucher, {
+      userId: cleanString(userId),
+      totalItemsPrice: Number(totalItemsPrice) || 0,
+      totalQuantity: Number(totalQuantity) || 0,
+    });
+  }
+
+  const resolvedContext = await resolveOrderContext(orderItems, totalItemsPrice, totalQuantity);
+  const orderSubtotal = resolvedContext.totalItemsPrice;
+  const orderQuantity = resolvedContext.totalQuantity;
+
   await assertVoucherCanBeUsed(foundVoucher, {
     userId: cleanString(userId),
-    totalItemsPrice: Number(totalItemsPrice) || 0,
-    totalQuantity: Number(totalQuantity) || 0,
+    totalItemsPrice: orderSubtotal,
+    totalQuantity: orderQuantity,
   });
 
-  const orderSubtotal = Math.max(0, Number(totalItemsPrice) || 0);
   const originalShippingFee = Math.max(0, Number(shippingFee) || 0);
-  const eligibleSubtotal = await getEligibleSubtotal(foundVoucher, orderItems, orderSubtotal);
+  const eligibleSubtotal = await getEligibleSubtotal(foundVoucher, resolvedContext.orderItems, orderSubtotal);
   const maxDiscountAmount = getMaxDiscountAmount(foundVoucher);
   let discountAmount = 0;
   let shippingDiscount = 0;
@@ -379,6 +536,14 @@ async function calculateVoucherDiscount({
       const fixedDiscount = getFixedDiscountAmount(foundVoucher);
       discountAmount = Math.min(fixedDiscount, eligibleSubtotal);
     }
+  }
+
+  if (discountAmount <= 0 && shippingDiscount <= 0) {
+    if (foundVoucher.type === "shipping" || foundVoucher.category === "freeship") {
+      throw createVoucherError("Phương thức vận chuyển hiện tại đã miễn phí, vui lòng chọn mã giảm giá khác.");
+    }
+
+    throw createVoucherError("Voucher không tạo ra ưu đãi cho đơn hàng hiện tại.");
   }
 
   return {
@@ -403,19 +568,76 @@ function getVoucherListUnavailableReason(voucher, context = {}) {
     return "Mã giảm giá này đã được sử dụng.";
   }
 
-  if (hasFirstOrderRule(voucher) && context.userHasAnyOrder) {
-    return "Mã này chỉ áp dụng cho đơn hàng đầu tiên.";
+  if (context.userId && hasFirstOrderRule(voucher)) {
+    if (context.userHasAnyOrder) {
+      return "Mã này chỉ áp dụng cho đơn hàng đầu tiên.";
+    }
   }
 
-  if (
-    context.userId &&
-    normalizeText(voucher?.usageLimit).includes("moi tai khoan") &&
-    context.usedVoucherCodes?.has(normalizedCode)
-  ) {
-    return "Tài khoản của bạn đã sử dụng mã giảm giá này.";
+  if (context.userId && hasPerAccountUsageRule(voucher)) {
+    if (context.usedVoucherCodes?.has(normalizedCode)) {
+      return "Tài khoản của bạn đã sử dụng mã giảm giá này.";
+    }
+  }
+
+  if (context.hasOrderContext) {
+    const minOrderValue = getMinOrderValue(voucher);
+    const totalItemsPrice = Math.max(0, Number(context.totalItemsPrice) || 0);
+    const totalQuantity = Math.max(0, Number(context.totalQuantity) || 0);
+    const shippingFee = Math.max(0, Number(context.shippingFee) || 0);
+
+    if (minOrderValue > 0 && totalItemsPrice < minOrderValue) {
+      return `Đơn hàng cần tối thiểu ${minOrderValue.toLocaleString("vi-VN")}đ để áp dụng mã này.`;
+    }
+
+    if (hasComboRule(voucher) && totalQuantity < 2) {
+      return "Mã combo chỉ áp dụng khi mua từ 2 sản phẩm trở lên.";
+    }
+
+    if (detectRequiredCategoryAliases(voucher).length > 0) {
+      const eligibleSubtotal = getEligibleSubtotalFromResolvedItems(
+        voucher,
+        context.orderItems || [],
+        totalItemsPrice
+      );
+
+      if (eligibleSubtotal <= 0) {
+        return "Mã giảm giá không áp dụng cho sản phẩm trong đơn hàng này.";
+      }
+    }
+
+    if ((voucher?.type === "shipping" || voucher?.category === "freeship") && shippingFee <= 0) {
+      return "Phương thức vận chuyển hiện tại đã miễn phí.";
+    }
+
+    const hasDiscountValue =
+      voucher?.type === "shipping" ||
+      voucher?.category === "freeship" ||
+      getPercentDiscountValue(voucher) > 0 ||
+      getFixedDiscountAmount(voucher) > 0;
+
+    if (!hasDiscountValue) {
+      return "Voucher chưa có giá trị giảm hợp lệ.";
+    }
   }
 
   return "";
+}
+
+function buildVoucherStatusText(unavailableReason, daysLeft) {
+  if (unavailableReason) {
+    return unavailableReason;
+  }
+
+  if (daysLeft === 0) {
+    return "Còn hiệu lực đến hết hôm nay.";
+  }
+
+  if (typeof daysLeft === "number" && daysLeft > 0 && daysLeft <= 3) {
+    return `Còn ${daysLeft} ngày.`;
+  }
+
+  return "Còn hiệu lực.";
 }
 
 function mapVoucherForClient(voucher, context = {}) {
@@ -423,7 +645,7 @@ function mapVoucherForClient(voucher, context = {}) {
   const unavailableReason = getVoucherListUnavailableReason(voucher, context);
   const isExpired = isVoucherExpired(voucher);
   const status = unavailableReason
-    ? (isExpired ? "expired" : "used")
+    ? (isExpired ? "expired" : "unavailable")
     : (daysLeft !== null && daysLeft <= 3 && voucher.status === "available" ? "expiring" : voucher.status);
 
   return {
@@ -445,13 +667,35 @@ function mapVoucherForClient(voucher, context = {}) {
     usageLimit: voucher.usageLimit,
     canApply: !unavailableReason,
     unavailableReason,
-    statusText: unavailableReason || voucher.statusText || "Còn hiệu lực.",
+    statusText: buildVoucherStatusText(unavailableReason, daysLeft),
   };
 }
 
 exports.getMyVouchers = async (req, res) => {
   try {
     const userId = cleanString(req.query.userId);
+    const totalItemsPrice = Number(req.query.totalItemsPrice) || 0;
+    const shippingFee = Number(req.query.shippingFee) || 0;
+    const totalQuantity = Number(req.query.totalQuantity) || 0;
+    let queryOrderItems = [];
+
+    if (typeof req.query.orderItems === "string" && req.query.orderItems.trim()) {
+      try {
+        const parsed = JSON.parse(req.query.orderItems);
+        queryOrderItems = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        queryOrderItems = [];
+      }
+    }
+
+    const hasOrderContext = totalItemsPrice > 0 || totalQuantity > 0 || queryOrderItems.length > 0;
+    const resolvedContext = hasOrderContext
+      ? await resolveOrderContext(queryOrderItems, totalItemsPrice, totalQuantity)
+      : {
+          totalItemsPrice: 0,
+          totalQuantity: 0,
+          orderItems: [],
+        };
     const vouchers = await Voucher.find({}).sort({ createdAt: 1 }).lean();
     let userHasAnyOrder = false;
     let usedVoucherCodes = new Set();
@@ -475,6 +719,11 @@ exports.getMyVouchers = async (req, res) => {
         userId,
         userHasAnyOrder,
         usedVoucherCodes,
+        hasOrderContext,
+        totalItemsPrice: resolvedContext.totalItemsPrice,
+        totalQuantity: resolvedContext.totalQuantity,
+        shippingFee,
+        orderItems: resolvedContext.orderItems,
       })
     );
 
