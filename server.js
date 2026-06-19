@@ -34,3 +34,12 @@ app.use("/api/cart", cartRoutes);
 
 const voucherRoutes = require("./routes/voucher.routes");
 app.use("/api/vouchers", voucherRoutes);
+
+const addressRoutes = require("./routes/address.routes");
+app.use("/api/addresses", addressRoutes);
+
+const orderRoutes = require("./routes/order.routes");
+app.use("/api/orders", orderRoutes);
+
+const paymentRoutes = require("./routes/payment.routes");
+app.use("/api/payments", paymentRoutes);
