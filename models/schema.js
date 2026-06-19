@@ -168,6 +168,9 @@ const VoucherSchema = new mongoose.Schema(
     benefits: [{ type: String }],
     conditions: [{ type: String }],
     startDate: { type: String, default: "" },
+    minOrderValue: { type: Number, default: 0 },
+    maxDiscountAmount: { type: Number, default: 0 },
+    discountValue: { type: Number, default: 0 },
     usageLimit: { type: String, default: "" },
     statusText: { type: String, default: "" },
   },
@@ -185,6 +188,10 @@ const OrderSchema = new Schema(
     Order_id: { type: String, required: true, unique: true },
     User_id: { type: String, required: true, ref: "User" },       // FK → User
     Voucher_id: { type: String, ref: "Voucher", default: null },  // FK → Voucher (nullable)
+    Voucher_code: { type: String, default: "" },
+    Voucher_title: { type: String, default: "" },
+    Voucher_discount_amount: { type: Number, default: 0 },
+    Voucher_shipping_discount: { type: Number, default: 0 },
     Total_items_price: { type: Number, required: true },
     Discount_amount: { type: Number, default: 0 },
     Total_amount: { type: Number, required: true },
@@ -204,6 +211,8 @@ const OrderDetailSchema = new Schema(
     Order_id: { type: String, required: true, ref: "Order" },                      // FK → Order
     Variant_name: { type: String, required: true }, // chụp lại tên lúc mua
     Price: { type: Number, required: true },         // chụp lại giá lúc mua
+    Original_price: { type: Number, default: 0 },
+    Discount_percent: { type: Number, default: 0 },
     Quantity: { type: Number, required: true, min: 1 },
     Total_price: { type: Number, required: true },   // Price × Quantity
   },
@@ -227,6 +236,10 @@ const PaymentSchema = new Schema(
       enum: ["pending", "paid", "failed", "refunded"],
       default: "pending",
     },
+    Amount: { type: Number, default: 0 },
+    Transaction_code: { type: String, default: "" },
+    Paid_at: { type: Date, default: null },
+    Failure_reason: { type: String, default: "" },
   },
   { collection: "Payment" }
 );
@@ -240,6 +253,8 @@ const DeliverySchema = new Schema(
     Order_id: { type: String, required: true, ref: "Order" }, // FK → Order
     Shipping_partner: { type: String }, // GHTK, GHN, Viettel Post
     Tracking_number: { type: String },
+    Original_shipping_fee: { type: Number, default: 0 },
+    Shipping_discount: { type: Number, default: 0 },
     Shipping_fee: { type: Number, default: 0 },
     Estimated_delivery_date: { type: Date },
     Status: {
