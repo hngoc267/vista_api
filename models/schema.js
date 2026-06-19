@@ -35,6 +35,7 @@ const AddressSchema = new Schema(
     User_id: { type: String, required: true, ref: "User" }, // FK → User
     Receiver_name: { type: String, required: true },
     Receiver_phone: { type: String, required: true },
+    Email: { type: String, trim: true },
     Province: { type: String, required: true },
     District: { type: String, required: true },
     Ward: { type: String, required: true },

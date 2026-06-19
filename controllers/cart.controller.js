@@ -135,6 +135,26 @@ async function buildCartResponse(cart) {
     ? await Product.find({ Product_id: { $in: productIds } }).lean()
     : [];
   const productMap = new Map(products.map((product) => [product.Product_id, product]));
+  const activeVariants = productIds.length
+    ? await Product_variant.find({
+        Product_id: { $in: productIds },
+        Status: "active",
+      })
+        .sort({ Price: 1 })
+        .lean()
+    : [];
+  const variantOptionsByProduct = new Map();
+  activeVariants.forEach((variant) => {
+    const product = productMap.get(variant.Product_id) || null;
+    const productOptions = variantOptionsByProduct.get(variant.Product_id) || [];
+    productOptions.push({
+      productVariantId: variant.Product_variant_id,
+      variantName: buildSpecs(product, variant) || variant.Variant_name,
+      price: Number(variant.Price) || 0,
+      stock: Number(variant.Stock_quantity) || 0,
+    });
+    variantOptionsByProduct.set(variant.Product_id, productOptions);
+  });
 
   const items = rawItems.map((item) => {
     const variant = variantMap.get(item.Product_variant_id) || null;
@@ -156,6 +176,7 @@ async function buildCartResponse(cart) {
       quantity,
       stockQuantity: Number(variant?.Stock_quantity) || 0,
       lineTotal,
+      variantOptions: product?.Product_id ? variantOptionsByProduct.get(product.Product_id) || [] : [],
     };
   });
 
