@@ -7,7 +7,6 @@ const {
   Product,
   Product_variant,
 } = require("../models/schema");
-const { calculateVoucherDiscount } = require("./voucher.controller");
 
 function cleanString(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
@@ -181,32 +180,21 @@ exports.createOrder = async (req, res) => {
       0,
       Number(delivery.Original_shipping_fee ?? delivery.Shipping_fee) || 0
     );
-    const voucherCode = cleanString(order.Voucher_code || order.Voucher_id);
-    let appliedVoucher = {
-      voucherId: null,
-      code: "",
-      title: "",
-      discountAmount: 0,
-      shippingDiscount: 0,
+    const productDiscount = Math.max(
+      0,
+      Math.min(Number(order.Voucher_discount_amount || order.Discount_amount) || 0, totalItemsPrice)
+    );
+    const shippingDiscount = Math.max(
+      0,
+      Math.min(Number(order.Voucher_shipping_discount) || 0, originalShippingFee)
+    );
+    const appliedVoucher = {
+      voucherId: cleanString(order.Voucher_id) || null,
+      code: cleanString(order.Voucher_code),
+      title: cleanString(order.Voucher_title),
+      discountAmount: productDiscount,
+      shippingDiscount,
     };
-
-    if (voucherCode) {
-      appliedVoucher = await calculateVoucherDiscount({
-        voucherCode,
-        totalItemsPrice,
-        shippingFee: originalShippingFee,
-        totalQuantity: normalizedDetails.reduce((sum, item) => sum + item.Quantity, 0),
-        userId,
-        orderItems: normalizedDetails.map((item) => ({
-          productVariantId: item.Product_variant_id,
-          quantity: item.Quantity,
-          price: item.Price,
-        })),
-      });
-    }
-
-    const productDiscount = Math.min(appliedVoucher.discountAmount, totalItemsPrice);
-    const shippingDiscount = Math.min(appliedVoucher.shippingDiscount, originalShippingFee);
     const shippingFeeAfterDiscount = Math.max(0, originalShippingFee - shippingDiscount);
     const totalDiscount = productDiscount + shippingDiscount;
     const totalAmount = Math.max(0, totalItemsPrice - productDiscount + shippingFeeAfterDiscount);
