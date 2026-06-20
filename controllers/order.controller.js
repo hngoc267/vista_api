@@ -4,16 +4,96 @@ const {
   Order,
   Order_detail,
   Payment,
+  Product,
   Product_variant,
 } = require("../models/schema");
+const { calculateVoucherDiscount } = require("./voucher.controller");
 
 function cleanString(value) {
-  return String(value || "").trim();
+  return String(value || "").replace(/\s+/g, " ").trim();
 }
 
-function normalizeOrderDetail(detail, orderId, variant) {
+function normalizeText(value) {
+  return cleanString(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d");
+}
+
+function calculateProductFinalPrice(originalPrice, product) {
+  const discount = Math.max(0, Math.min(100, Number(product?.Discount) || 0));
+  return Math.round(Number(originalPrice || 0) * (100 - discount) / 100);
+}
+
+function isSpecificAddressRealistic(value) {
+  const text = cleanString(value);
+  const normalized = normalizeText(text);
+
+  if (text.length < 5) {
+    return false;
+  }
+
+  if (/^\d+$/.test(text)) {
+    return false;
+  }
+
+  const hasNumber = /\d/.test(text);
+  const hasLetter = /[a-zA-ZÀ-ỹ]/.test(text);
+  const hasAddressKeyword = [
+    "duong",
+    "pho",
+    "hem",
+    "ngo",
+    "so",
+    "thon",
+    "xom",
+    "ap",
+    "ban",
+    "to",
+    "khu",
+    "toa",
+    "chung cu",
+    "quoc lo",
+    "tinh lo",
+  ].some((keyword) => normalized.includes(keyword));
+
+  return hasNumber && hasLetter && hasAddressKeyword;
+}
+
+function validateAddress(address) {
+  if (
+    !cleanString(address.Receiver_name) ||
+    !cleanString(address.Receiver_phone) ||
+    !cleanString(address.Email) ||
+    !cleanString(address.Province) ||
+    !cleanString(address.District) ||
+    !cleanString(address.Ward) ||
+    !cleanString(address.Specific_address)
+  ) {
+    return "Vui lòng nhập đầy đủ thông tin nhận hàng.";
+  }
+
+  if (!/^(0|\+84)[0-9]{9,10}$/.test(cleanString(address.Receiver_phone).replace(/\s/g, ""))) {
+    return "Số điện thoại nhận hàng không hợp lệ.";
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanString(address.Email))) {
+    return "Email nhận hàng không hợp lệ.";
+  }
+
+  if (!isSpecificAddressRealistic(address.Specific_address)) {
+    return "Địa chỉ chi tiết cần có số nhà và tên đường/thôn/xóm/tổ/khu thực tế, không chỉ nhập mỗi số.";
+  }
+
+  return "";
+}
+
+function normalizeOrderDetail(detail, orderId, variant, product) {
   const quantity = Math.max(1, Number(detail.Quantity) || 1);
-  const price = Number(detail.Price ?? variant.Price ?? 0);
+  const originalPrice = Number(variant.Price) || 0;
+  const discountPercent = Math.max(0, Math.min(100, Number(product?.Discount) || 0));
+  const price = calculateProductFinalPrice(originalPrice, product);
 
   return {
     Order_detail_id: cleanString(detail.Order_detail_id),
@@ -21,6 +101,8 @@ function normalizeOrderDetail(detail, orderId, variant) {
     Order_id: orderId,
     Variant_name: cleanString(detail.Variant_name) || variant.Variant_name,
     Price: price,
+    Original_price: originalPrice,
+    Discount_percent: discountPercent,
     Quantity: quantity,
     Total_price: price * quantity,
   };
@@ -47,18 +129,11 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    if (
-      !cleanString(address.Receiver_name) ||
-      !cleanString(address.Receiver_phone) ||
-      !cleanString(address.Email) ||
-      !cleanString(address.Province) ||
-      !cleanString(address.District) ||
-      !cleanString(address.Ward) ||
-      !cleanString(address.Specific_address)
-    ) {
+    const addressError = validateAddress(address);
+    if (addressError) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng nhập đầy đủ thông tin nhận hàng.",
+        message: addressError,
       });
     }
 
@@ -76,9 +151,16 @@ exports.createOrder = async (req, res) => {
       });
     }
 
+    const productIds = [...new Set(variants.map((variant) => variant.Product_id).filter(Boolean))];
+    const products = productIds.length
+      ? await Product.find({ Product_id: { $in: productIds } }).lean()
+      : [];
+    const productMap = new Map(products.map((product) => [product.Product_id, product]));
+
     const normalizedDetails = orderDetails.map((detail) => {
       const variant = variantMap.get(cleanString(detail.Product_variant_id));
-      return normalizeOrderDetail(detail, orderId, variant);
+      const product = productMap.get(variant.Product_id) || null;
+      return normalizeOrderDetail(detail, orderId, variant, product);
     });
 
     const outOfStockItem = normalizedDetails.find((detail) => {
@@ -95,15 +177,50 @@ exports.createOrder = async (req, res) => {
     }
 
     const totalItemsPrice = normalizedDetails.reduce((sum, item) => sum + item.Total_price, 0);
-    const discountAmount = Math.max(0, Number(order.Discount_amount) || 0);
-    const totalAmount = Math.max(0, Number(order.Total_amount) || (totalItemsPrice - discountAmount + Number(delivery.Shipping_fee || 0)));
+    const originalShippingFee = Math.max(
+      0,
+      Number(delivery.Original_shipping_fee ?? delivery.Shipping_fee) || 0
+    );
+    const voucherCode = cleanString(order.Voucher_code || order.Voucher_id);
+    let appliedVoucher = {
+      voucherId: null,
+      code: "",
+      title: "",
+      discountAmount: 0,
+      shippingDiscount: 0,
+    };
+
+    if (voucherCode) {
+      appliedVoucher = await calculateVoucherDiscount({
+        voucherCode,
+        totalItemsPrice,
+        shippingFee: originalShippingFee,
+        totalQuantity: normalizedDetails.reduce((sum, item) => sum + item.Quantity, 0),
+        userId,
+        orderItems: normalizedDetails.map((item) => ({
+          productVariantId: item.Product_variant_id,
+          quantity: item.Quantity,
+          price: item.Price,
+        })),
+      });
+    }
+
+    const productDiscount = Math.min(appliedVoucher.discountAmount, totalItemsPrice);
+    const shippingDiscount = Math.min(appliedVoucher.shippingDiscount, originalShippingFee);
+    const shippingFeeAfterDiscount = Math.max(0, originalShippingFee - shippingDiscount);
+    const totalDiscount = productDiscount + shippingDiscount;
+    const totalAmount = Math.max(0, totalItemsPrice - productDiscount + shippingFeeAfterDiscount);
 
     await Order.create({
       Order_id: orderId,
       User_id: userId,
-      Voucher_id: cleanString(order.Voucher_id) || null,
+      Voucher_id: appliedVoucher.voucherId || null,
+      Voucher_code: appliedVoucher.code || "",
+      Voucher_title: appliedVoucher.title || "",
+      Voucher_discount_amount: productDiscount,
+      Voucher_shipping_discount: shippingDiscount,
       Total_items_price: totalItemsPrice,
-      Discount_amount: discountAmount,
+      Discount_amount: totalDiscount,
       Total_amount: totalAmount,
       Order_notes: cleanString(order.Order_notes),
       Created_at: order.Created_at ? new Date(order.Created_at) : new Date(),
@@ -140,7 +257,9 @@ exports.createOrder = async (req, res) => {
       Order_id: orderId,
       Shipping_partner: cleanString(delivery.Shipping_partner),
       Tracking_number: cleanString(delivery.Tracking_number),
-      Shipping_fee: Number(delivery.Shipping_fee) || 0,
+      Original_shipping_fee: originalShippingFee,
+      Shipping_discount: shippingDiscount,
+      Shipping_fee: shippingFeeAfterDiscount,
       Estimated_delivery_date: delivery.Estimated_delivery_date ? new Date(delivery.Estimated_delivery_date) : null,
       Status: delivery.Status || "pending",
     });
@@ -150,6 +269,9 @@ exports.createOrder = async (req, res) => {
       Order_id: orderId,
       Payment_type: payment.Payment_type,
       Payment_status: payment.Payment_status || "pending",
+      Amount: totalAmount,
+      Transaction_code: cleanString(payment.Transaction_code),
+      Paid_at: payment.Payment_status === "paid" ? new Date() : null,
     });
 
     await Promise.all(
@@ -166,10 +288,12 @@ exports.createOrder = async (req, res) => {
       message: "Tạo đơn hàng thành công.",
       data: {
         orderId,
+        totalAmount,
+        voucher: appliedVoucher,
       },
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       success: false,
       message: error.message,
     });

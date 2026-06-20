@@ -106,6 +106,14 @@ function buildSpecs(product, variant) {
   return specs.join(" / ");
 }
 
+function getDiscountPercent(product) {
+  return Math.max(0, Math.min(100, Number(product?.Discount) || 0));
+}
+
+function getFinalPrice(originalPrice, product) {
+  return Math.round((Number(originalPrice) || 0) * (100 - getDiscountPercent(product)) / 100);
+}
+
 async function getOrCreateCart(userId) {
   let cart = await Cart.findOne({ User_id: userId });
 
@@ -146,11 +154,15 @@ async function buildCartResponse(cart) {
   const variantOptionsByProduct = new Map();
   activeVariants.forEach((variant) => {
     const product = productMap.get(variant.Product_id) || null;
+    const originalPrice = Number(variant.Price) || 0;
+    const price = getFinalPrice(originalPrice, product);
     const productOptions = variantOptionsByProduct.get(variant.Product_id) || [];
     productOptions.push({
       productVariantId: variant.Product_variant_id,
       variantName: buildSpecs(product, variant) || variant.Variant_name,
-      price: Number(variant.Price) || 0,
+      price,
+      originalPrice,
+      discountPercent: getDiscountPercent(product),
       stock: Number(variant.Stock_quantity) || 0,
     });
     variantOptionsByProduct.set(variant.Product_id, productOptions);
@@ -159,9 +171,12 @@ async function buildCartResponse(cart) {
   const items = rawItems.map((item) => {
     const variant = variantMap.get(item.Product_variant_id) || null;
     const product = variant ? (productMap.get(variant.Product_id) || null) : null;
-    const unitPrice = Number(item.Price) || 0;
+    const originalUnitPrice = Number(variant?.Price ?? item.Price) || 0;
+    const unitPrice = getFinalPrice(originalUnitPrice, product);
+    const discountPercent = getDiscountPercent(product);
     const quantity = Number(item.Quantity) || 0;
     const lineTotal = unitPrice * quantity;
+    const originalLineTotal = originalUnitPrice * quantity;
 
     return {
       cartItemId: item.Cart_item_id,
@@ -173,9 +188,12 @@ async function buildCartResponse(cart) {
       specs: buildSpecs(product, variant),
       image: Array.isArray(product?.Images) && product.Images.length > 0 ? product.Images[0] : "",
       unitPrice,
+      originalUnitPrice,
+      discountPercent,
       quantity,
       stockQuantity: Number(variant?.Stock_quantity) || 0,
       lineTotal,
+      originalLineTotal,
       variantOptions: product?.Product_id ? variantOptionsByProduct.get(product.Product_id) || [] : [],
     };
   });
