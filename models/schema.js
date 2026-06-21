@@ -196,6 +196,16 @@ const OrderSchema = new Schema(
     Discount_amount: { type: Number, default: 0 },
     Total_amount: { type: Number, required: true },
     Order_notes: { type: String },
+    Status: {
+      type: String,
+      enum: ["pending_payment", "processing", "shipping", "review", "returning", "cancelled"],
+      default: "pending_payment" // Mặc định tạo đơn là chờ thanh toán
+    },
+    Review_status: {
+      type: String,
+      enum: ["not_reviewed", "reviewed"],
+      default: "not_reviewed"
+    },
     Created_at: { type: Date, default: Date.now },
   },
   { collection: "Order" }
