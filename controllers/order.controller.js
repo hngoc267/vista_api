@@ -20,6 +20,20 @@ function normalizeText(value) {
     .replace(/đ/g, "d");
 }
 
+function normalizePaymentType(value) {
+  const normalized = normalizeText(value);
+
+  if (["cod", "cash", "tien mat", "tienmat", "thanh toan tien mat", "thanh toan khi nhan hang"].includes(normalized)) {
+    return "COD";
+  }
+
+  if (["banktransfer", "qr", "chuyen khoan", "chuyen khoan qr", "chuyen khoan ngan hang"].includes(normalized)) {
+    return "BankTransfer";
+  }
+
+  return cleanString(value) || "COD";
+}
+
 function calculateProductFinalPrice(originalPrice, product) {
   const discount = Math.max(0, Math.min(100, Number(product?.Discount) || 0));
   return Math.round(Number(originalPrice || 0) * (100 - discount) / 100);
@@ -198,10 +212,16 @@ exports.createOrder = async (req, res) => {
     const shippingFeeAfterDiscount = Math.max(0, originalShippingFee - shippingDiscount);
     const totalDiscount = productDiscount + shippingDiscount;
     const totalAmount = Math.max(0, totalItemsPrice - productDiscount + shippingFeeAfterDiscount);
+    const normalizedPaymentType = normalizePaymentType(payment.Payment_type);
+    const orderStatus = normalizedPaymentType === "BankTransfer"
+      ? "pending_payment"
+      : "processing";
+    const createdAt = order.Created_at ? new Date(order.Created_at) : new Date();
 
     await Order.create({
       Order_id: orderId,
       User_id: userId,
+      Status: orderStatus,
       Voucher_id: appliedVoucher.voucherId || null,
       Voucher_code: appliedVoucher.code || "",
       Voucher_title: appliedVoucher.title || "",
@@ -211,7 +231,8 @@ exports.createOrder = async (req, res) => {
       Discount_amount: totalDiscount,
       Total_amount: totalAmount,
       Order_notes: cleanString(order.Order_notes),
-      Created_at: order.Created_at ? new Date(order.Created_at) : new Date(),
+      Created_at: createdAt,
+      Processing_started_at: orderStatus === "processing" ? createdAt : null,
     });
 
     await Order_detail.insertMany(normalizedDetails);
@@ -255,7 +276,7 @@ exports.createOrder = async (req, res) => {
     await Payment.create({
       Payment_id: cleanString(payment.Payment_id),
       Order_id: orderId,
-      Payment_type: payment.Payment_type,
+      Payment_type: normalizedPaymentType,
       Payment_status: payment.Payment_status || "pending",
       Amount: totalAmount,
       Transaction_code: cleanString(payment.Transaction_code),

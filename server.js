@@ -38,6 +38,9 @@ app.use("/api/vouchers", voucherRoutes);
 const addressRoutes = require("./routes/address.routes");
 app.use("/api/addresses", addressRoutes);
 
+const orderHistoryRoutes = require('./routes/order-history.routes');
+app.use('/api/order-history', orderHistoryRoutes);
+
 const orderRoutes = require("./routes/order.routes");
 app.use("/api/orders", orderRoutes);
 
