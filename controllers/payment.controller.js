@@ -1,4 +1,4 @@
-const { Payment } = require("../models/schema");
+const { Order, Payment } = require("../models/schema");
 
 function cleanString(value) {
   return String(value || "").trim();
@@ -55,6 +55,10 @@ exports.confirmBankTransfer = async (req, res) => {
       });
     }
 
+    const order = await Order.findOne({ Order_id: payment.Order_id }).lean();
+    const orderStatus = String(order?.Status || "").trim().toLowerCase();
+    const shouldStartProcessingTimer = orderStatus === "pending_payment" || !order?.Processing_started_at;
+
     if (payment.Payment_type !== "BankTransfer") {
       return res.status(400).json({
         success: false,
@@ -63,6 +67,18 @@ exports.confirmBankTransfer = async (req, res) => {
     }
 
     if (payment.Payment_status === "paid") {
+      if (shouldStartProcessingTimer) {
+        await Order.updateOne(
+          { Order_id: payment.Order_id },
+          {
+            $set: {
+              Status: "processing",
+              Processing_started_at: new Date(),
+            },
+          }
+        );
+      }
+
       return res.json({
         success: true,
         message: "Giao dịch đã được thanh toán.",
@@ -100,6 +116,18 @@ exports.confirmBankTransfer = async (req, res) => {
     payment.Paid_at = new Date();
     payment.Failure_reason = "";
     await payment.save();
+
+    if (shouldStartProcessingTimer) {
+      await Order.updateOne(
+        { Order_id: payment.Order_id },
+        {
+          $set: {
+            Status: "processing",
+            Processing_started_at: new Date(),
+          },
+        }
+      );
+    }
 
     return res.json({
       success: true,

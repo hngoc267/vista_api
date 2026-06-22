@@ -201,6 +201,7 @@ const OrderSchema = new Schema(
       enum: ["pending_payment", "processing", "shipping", "review", "returning", "cancelled"],
       default: "pending_payment" // Mặc định tạo đơn là chờ thanh toán
     },
+    Processing_started_at: { type: Date, default: null },
     Review_status: {
       type: String,
       enum: ["not_reviewed", "reviewed"],
@@ -267,6 +268,7 @@ const DeliverySchema = new Schema(
     Shipping_discount: { type: Number, default: 0 },
     Shipping_fee: { type: Number, default: 0 },
     Estimated_delivery_date: { type: Date },
+    Delivered_at: { type: Date, default: null },
     Status: {
       type: String,
       enum: ["pending", "shipping", "delivered", "failed"],
