@@ -1,14 +1,67 @@
-const { Order, Payment, Delivery } = require('../models/schema');
+const { Order, Payment, Delivery, Order_detail, Product_variant, Return_order } = require('../models/schema');
 
 const PROCESSING_STATUSES = new Set(['processing']);
 const IMMUTABLE_STATUSES = new Set(['returning', 'cancelled', 'delivered']);
 const SHIPPING_STATUSES = new Set(['shipping', 'delivering']);
 const REVIEW_DISPLAY_STATUSES = new Set(['review', 'delivered']);
 const PENDING_PAYMENT_AUTO_CANCEL_MS = 24 * 60 * 60 * 1000;
+const CANCELLABLE_STATUSES = new Set(['pending_payment', 'processing', 'shipping', 'delivering']);
 
 function cleanText(value) {
   return String(value || '').trim();
 }
+
+const RETURN_REASON_LABELS = {
+  damaged: 'Hàng lỗi, không hoạt động',
+  not_as_described: 'Khác với mô tả',
+  used_item: 'Hàng đã qua sử dụng',
+  counterfeit: 'Hàng giả, nhái',
+  missing_accessories: 'Hàng nguyên vẹn nhưng không còn nhu cầu',
+  wrong_item: 'Giao sai sản phẩm',
+  changed_mind: 'Không còn nhu cầu',
+  other: 'Lý do khác',
+};
+
+function buildReturnReasonLabel(value) {
+  const reason = cleanText(value);
+  return RETURN_REASON_LABELS[reason] || reason || 'Chưa có lý do hoàn trả.';
+}
+
+function summarizeReturnRequests(returnRequests) {
+  const requests = Array.isArray(returnRequests) ? returnRequests : [];
+  const sortedRequests = [...requests].sort((a, b) => new Date(b.Created_at || 0) - new Date(a.Created_at || 0));
+  const latest = sortedRequests[0] || null;
+  const evidenceImages = [...new Set(requests.flatMap((item) => Array.isArray(item.Evidence_images) ? item.Evidence_images : []))];
+  const refundAmount = requests.reduce((sum, item) => sum + (Number(item.Refund_amount) || 0), 0);
+  const reasonType = cleanText(latest?.Reason_type || '');
+  const returnItems = requests.map((item) => ({
+    Return_order_id: cleanText(item.Return_order_id || ''),
+    Product_variant_id: cleanText(item.Product_variant_id || ''),
+    Return_quantity: Math.max(1, Number(item.Return_quantity || 1) || 1),
+    Refund_amount: Number(item.Refund_amount) || 0,
+    Status: cleanText(item.Status || ''),
+  }));
+
+  return {
+    Return_requests: requests,
+    Return_items: returnItems,
+    Return_order_id: latest?.Return_order_id || '',
+    Return_product_variant_id: latest?.Product_variant_id || '',
+    Return_reason_type: reasonType,
+    Return_reason: buildReturnReasonLabel(reasonType),
+    Return_description: cleanText(latest?.Description || ''),
+    Return_status: cleanText(latest?.Status || ''),
+    Return_created_at: latest?.Created_at || null,
+    Return_refund_amount: refundAmount,
+    Return_name: cleanText(latest?.Return_name || ''),
+    Return_phone: cleanText(latest?.Return_phone || ''),
+    Return_email: cleanText(latest?.Return_email || ''),
+    Return_address: cleanText(latest?.Return_address || ''),
+    Return_tracking_number: cleanText(latest?.Return_tracking_number || ''),
+    Return_evidence_images: evidenceImages,
+  };
+}
+
 
 function normalizeStatusValue(value) {
   const normalized = cleanText(value)
@@ -205,6 +258,14 @@ const getOrderHistory = async (req, res) => {
       },
       {
         $lookup: {
+          from: 'Return_order',
+          localField: 'Order_id',
+          foreignField: 'Order_id',
+          as: 'ReturnInfo'
+        }
+      },
+      {
+        $lookup: {
           from: 'Address',
           let: { userId: '$User_id' },
           pipeline: [
@@ -225,13 +286,21 @@ const getOrderHistory = async (req, res) => {
       const paymentType = normalizePaymentType(paymentInfo?.Payment_type);
       const deliveryInfo = order.DeliveryInfo && order.DeliveryInfo.length > 0 ? order.DeliveryInfo[0] : null;
       const addressInfo = order.AddressInfo && order.AddressInfo.length > 0 ? order.AddressInfo[0] : null;
+      const returnSummary = summarizeReturnRequests(order.ReturnInfo || []);
       const resolvedStatus = resolveHistoryStatus(order, paymentInfo);
       const currentStatus = cleanText(order.Status);
 
       if (resolvedStatus && resolvedStatus !== currentStatus) {
+        const orderUpdate = { Status: resolvedStatus };
+
+        if (resolvedStatus === 'cancelled') {
+          orderUpdate.Cancel_reason = order.Cancel_reason || 'Đơn hàng đã tự động hủy do quá hạn thanh toán.';
+          orderUpdate.Cancelled_at = order.Cancelled_at || new Date();
+        }
+
         await Order.updateOne(
           { Order_id: order.Order_id },
-          { $set: { Status: resolvedStatus } }
+          { $set: orderUpdate }
         );
       }
 
@@ -251,6 +320,26 @@ const getOrderHistory = async (req, res) => {
         Order_code: order.Order_id, 
         Created_at: order.Created_at,
         Status: resolvedStatus,
+        Cancel_reason: resolvedStatus === 'cancelled'
+          ? (order.Cancel_reason || 'Đơn hàng đã bị hủy.')
+          : (order.Cancel_reason || ''),
+        Cancelled_at: order.Cancelled_at || null,
+        Return_requests: returnSummary.Return_requests,
+        Return_items: returnSummary.Return_items,
+        Return_order_id: returnSummary.Return_order_id,
+        Return_product_variant_id: returnSummary.Return_product_variant_id,
+        Return_reason_type: returnSummary.Return_reason_type,
+        Return_reason: returnSummary.Return_reason,
+        Return_description: returnSummary.Return_description,
+        Return_status: returnSummary.Return_status,
+        Return_created_at: returnSummary.Return_created_at,
+        Return_refund_amount: returnSummary.Return_refund_amount,
+        Return_name: returnSummary.Return_name,
+        Return_phone: returnSummary.Return_phone,
+        Return_email: returnSummary.Return_email,
+        Return_address: returnSummary.Return_address,
+        Return_tracking_number: returnSummary.Return_tracking_number,
+        Return_evidence_images: returnSummary.Return_evidence_images,
         Review_status: order.Review_status || 'not_reviewed',
         Processing_started_at: order.Processing_started_at || null,
         Customer_name: userInfo?.Full_name || order.Customer_name || '',
@@ -297,17 +386,24 @@ const getOrderHistory = async (req, res) => {
             : '/assets/images/default-product.png';
             
           const productName = item.ProductInfo ? item.ProductInfo.Product_name : item.Variant_name;
+          const variantId = item.Product_variant_id || item.VariantInfo?.Product_variant_id || '';
+          const returnItem = (returnSummary.Return_items || []).find(
+            (requestItem) => requestItem.Product_variant_id === variantId
+          );
 
           return {
             Product_id: item.ProductInfo ? item.ProductInfo.Product_id : (i + 1), 
-            Product_variant_id: item.Product_variant_id || item.VariantInfo?.Product_variant_id || '',
-            productVariantId: item.Product_variant_id || item.VariantInfo?.Product_variant_id || '',
+            Product_variant_id: variantId,
+            productVariantId: variantId,
             Product_name: productName,
             Variant_name: item.Variant_name,
             Price: item.Price,
             Original_price: item.Original_price || (item.VariantInfo ? item.VariantInfo.Price : 0) || 0,
             Discount_percent: item.Discount_percent || item.ProductInfo?.Discount || 0,
             Quantity: item.Quantity,
+            Return_quantity: returnItem?.Return_quantity || 0,
+            Return_refund_amount: returnItem?.Refund_amount || 0,
+            Is_returned_item: !!returnItem,
             Total_price: item.Total_price || ((item.Price || 0) * (item.Quantity || 0)),
             Image: productImage
           };
@@ -428,7 +524,125 @@ const markOrderReceived = async (req, res) => {
   }
 };
 
+
+
+const cancelOrder = async (req, res) => {
+  try {
+    const orderId = cleanText(req.params.orderId);
+    const reason = cleanText(req.body?.reason);
+
+    if (!orderId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thiếu mã đơn hàng.',
+      });
+    }
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vui lòng chọn lý do hủy đơn hàng.',
+      });
+    }
+
+    const order = await Order.findOne({ Order_id: orderId }).lean();
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy đơn hàng.',
+      });
+    }
+
+    const currentStatus = normalizeStatusValue(order.Status);
+    if (currentStatus === 'cancelled') {
+      return res.status(200).json({
+        success: true,
+        message: 'Đơn hàng đã được hủy trước đó.',
+        data: {
+          Order_id: orderId,
+          Status: 'cancelled',
+          Cancel_reason: order.Cancel_reason || reason,
+          Cancelled_at: order.Cancelled_at || null,
+        },
+      });
+    }
+
+    if (!CANCELLABLE_STATUSES.has(currentStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Chỉ có thể hủy đơn hàng chờ thanh toán, đang xử lý hoặc đang giao.',
+      });
+    }
+
+    const cancelledAt = new Date();
+    const orderDetails = await Order_detail.find({ Order_id: orderId }).lean();
+
+    await Promise.all(
+      orderDetails.map((item) =>
+        Product_variant.updateOne(
+          { Product_variant_id: item.Product_variant_id },
+          { $inc: { Stock_quantity: Math.max(0, Number(item.Quantity) || 0) } }
+        )
+      )
+    );
+
+    const payment = await Payment.findOne({ Order_id: orderId }).lean();
+    let nextPaymentStatus = cleanText(payment?.Payment_status || 'pending');
+
+    if (payment) {
+      const currentPaymentStatus = cleanText(payment.Payment_status).toLowerCase();
+      nextPaymentStatus = currentPaymentStatus === 'paid' ? 'refunded' : 'failed';
+
+      await Payment.updateOne(
+        { Order_id: orderId },
+        {
+          $set: {
+            Payment_status: nextPaymentStatus,
+            Failure_reason: reason,
+          },
+        }
+      );
+    }
+
+    await Delivery.updateOne(
+      { Order_id: orderId },
+      { $set: { Status: 'failed' } }
+    );
+
+    await Order.updateOne(
+      { Order_id: orderId },
+      {
+        $set: {
+          Status: 'cancelled',
+          Cancel_reason: reason,
+          Cancelled_at: cancelledAt,
+        },
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Đã hủy đơn hàng thành công.',
+      data: {
+        Order_id: orderId,
+        Status: 'cancelled',
+        Cancel_reason: reason,
+        Cancelled_at: cancelledAt,
+        Payment_status: nextPaymentStatus,
+        Delivery_status: 'failed',
+      },
+    });
+  } catch (error) {
+    console.error('Lỗi khi hủy đơn hàng:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Đã xảy ra lỗi hệ thống khi hủy đơn hàng.',
+    });
+  }
+};
+
 module.exports = {
   getOrderHistory,
-  markOrderReceived
+  markOrderReceived,
+  cancelOrder,
 };
