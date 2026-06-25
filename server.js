@@ -7,12 +7,25 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const JSON_BODY_LIMIT = process.env.JSON_BODY_LIMIT || "50mb";
 
 app.use(cors({
   origin: 'http://localhost:4200',
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: JSON_BODY_LIMIT }));
+app.use(express.urlencoded({ extended: true, limit: JSON_BODY_LIMIT }));
+
+app.use((err, req, res, next) => {
+  if (err?.type === "entity.too.large" || err?.status === 413) {
+    return res.status(413).json({
+      success: false,
+      message: "Dung lượng ảnh/video bằng chứng quá lớn. Vui lòng chọn tệp nhỏ hơn rồi thử lại.",
+    });
+  }
+
+  return next(err);
+});
 
 app.get("/", (req, res) => {
   res.json({ message: "VISTA API is running!" });
@@ -40,6 +53,9 @@ app.use("/api/addresses", addressRoutes);
 
 const orderHistoryRoutes = require('./routes/order-history.routes');
 app.use('/api/order-history', orderHistoryRoutes);
+
+const returnOrderRoutes = require('./routes/return-order.routes');
+app.use('/api/return-orders', returnOrderRoutes);
 
 const orderRoutes = require("./routes/order.routes");
 app.use("/api/orders", orderRoutes);

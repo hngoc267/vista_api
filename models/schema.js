@@ -205,6 +205,8 @@ const OrderSchema = new Schema(
     Discount_amount: { type: Number, default: 0 },
     Total_amount: { type: Number, required: true },
     Order_notes: { type: String },
+    Cancel_reason: { type: String, default: "" },
+    Cancelled_at: { type: Date, default: null },
     Status: {
       type: String,
       enum: ["pending_payment", "processing", "shipping", "review", "returning", "cancelled"],
@@ -288,21 +290,23 @@ const DeliverySchema = new Schema(
 );
 
 // ============================================================
-// 14. RETURN_ORDER — Yêu cầu hủy/trả hàng
+// 14. RETURN_ORDER — Yêu cầu trả hàng / hoàn trả
 // ============================================================
 const ReturnOrderSchema = new Schema(
   {
     Return_order_id: { type: String, required: true, unique: true },
-    Order_id: { type: String, required: true, ref: "Order" },                      // FK → Order
-    Product_variant_id: { type: String, required: true, ref: "Product_variant" }, // FK → Product_variant
-    Reason_type: {
-      type: String,
-      enum: ["damaged", "wrong_item", "changed_mind", "other"],
-      required: true,
-    },
-    Description: { type: String },
-    Evidence_images: [{ type: String }], // mảng URL ảnh/video
+    Order_id: { type: String, required: true, ref: "Order" },
+    Product_variant_id: { type: String, required: true, ref: "Product_variant" },
+    Return_quantity: { type: Number, default: 1, min: 1 },
+    Reason_type: { type: String, required: true, trim: true },
+    Description: { type: String, default: "" },
+    Evidence_images: [{ type: String }],
     Refund_amount: { type: Number, default: 0 },
+    Return_name: { type: String, default: "" },
+    Return_phone: { type: String, default: "" },
+    Return_email: { type: String, default: "" },
+    Return_address: { type: String, default: "" },
+    Return_tracking_number: { type: String, default: "" },
     Status: {
       type: String,
       enum: ["pending", "approved", "rejected", "completed"],
