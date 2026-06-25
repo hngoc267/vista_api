@@ -133,7 +133,10 @@ exports.getFeaturedProducts = async (req, res) => {
 // 4. FLASH SALE
 exports.getFlashSaleProducts = async (req, res) => {
   try {
-    const products = await Product.find({ Status: "on_sale", Is_Flash_Sale: true }).limit(8).lean();
+    const products = await Product.find({ Status: "on_sale", Is_Flash_Sale: true })
+  .sort({ Discount: -1 })
+  .limit(16)
+  .lean();
     const productsWithPrice = await Promise.all(
       products.map(async (product) => {
         const variant = await Product_variant.findOne({ Product_id: product.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
