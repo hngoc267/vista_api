@@ -7,4 +7,7 @@ const orderHistoryController = require("../controllers/order-history.controller"
 router.get("/:userId", orderHistoryController.getOrderHistory);
 router.patch("/:orderId/received", orderHistoryController.markOrderReceived);
 
+// SỬA DÒNG NÀY
+router.put('/mark-reviewed', orderHistoryController.markOrderReviewed); 
+
 module.exports = router;

@@ -21,7 +21,12 @@ const UserSchema = new Schema(
     Status: { type: String, enum: ["active", "blocked"], default: "active" },
     Created_at: { type: Date, default: Date.now },
     Reset_otp: { type: String, default: null },
-    Reset_otp_expires: { type: Date, default: null } 
+    Reset_otp_expires: { type: Date, default: null },
+    // Thêm trường này vào Mongoose Schema của bạn
+  Total_spent: {
+  type: Number,
+  default: 0 // Rất quan trọng: User mới tạo tài khoản thì mặc định điểm là 0
+}
   },
   { collection: "User" }
 );
@@ -173,6 +178,10 @@ const VoucherSchema = new mongoose.Schema(
     discountValue: { type: Number, default: 0 },
     usageLimit: { type: String, default: "" },
     statusText: { type: String, default: "" },
+    Required_tier: {
+  type: Number,
+  default: 0 // Mặc định là 0 (Hạng Bronze) để ai cũng dùng được
+}
   },
   {
     collection: "Voucher",

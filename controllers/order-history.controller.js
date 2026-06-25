@@ -432,3 +432,75 @@ module.exports = {
   getOrderHistory,
   markOrderReceived
 };
+// Nhớ đảm bảo bạn đã có import model User ở đầu file nhé
+// Ví dụ: const { Order, Payment, Delivery, User } = require('../models/schema');
+
+const markOrderReviewed = async (req, res) => {
+  try {
+    const orderId = req.body.orderId || req.body.Order_id; 
+    console.log("=== BẮT ĐẦU CHẠY API ĐÁNH GIÁ ===");
+    console.log("1. Mã đơn hàng nhận được:", orderId);
+
+    if (!orderId) {
+      console.log("-> LỖI: Không nhận được mã đơn hàng từ Frontend");
+      return res.status(400).json({ success: false, message: 'Thiếu mã đơn hàng.' });
+    }
+
+    // 1. Tìm đơn hàng
+    const order = await Order.findOne({ Order_id: orderId }).lean();
+    if (!order) {
+      console.log("-> LỖI: Không tìm thấy đơn trong DB");
+      return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng.' });
+    }
+
+    console.log("2. Thông tin đơn - Tổng tiền:", order.Total_amount, "| Trạng thái:", order.Review_status);
+
+    // Kiểm tra đã đánh giá chưa
+    if (order.Review_status === 'reviewed') {
+      console.log("-> LỖI: Đơn đã đánh giá trước đó, DỪNG LẠI không cộng điểm!");
+      return res.status(400).json({ success: false, message: 'Đơn hàng này đã được đánh giá trước đó.' });
+    }
+
+    // 2. Cập nhật trạng thái đánh giá
+    await Order.updateOne(
+      { Order_id: orderId },
+      { $set: { Review_status: 'reviewed' } }
+    );
+    console.log("3. Đã cập nhật trạng thái đơn thành 'reviewed'");
+
+    // 3. Cộng điểm
+    const { User } = require('../models/schema'); //[cite: 8]
+    const amountToAdd = Number(order.Total_amount) || 0;
+    const userId = order.User_id;
+
+    console.log("4. Chuẩn bị cộng điểm | User ID:", userId, "| Số tiền cộng:", amountToAdd);
+
+    if (userId && amountToAdd > 0) {
+      const updateResult = await User.updateOne(
+        { User_id: userId },
+        { $inc: { Total_spent: amountToAdd } } 
+      );
+      console.log("5. Kết quả MongoDB cập nhật User:", updateResult);
+    } else {
+      console.log("-> LỖI HOẶC BỎ QUA: Mã user bị trống hoặc số tiền đơn hàng bằng 0");
+    }
+
+    console.log("=== KẾT THÚC THÀNH CÔNG ===");
+    return res.status(200).json({
+      success: true,
+      message: 'Đã đánh giá đơn hàng và cộng điểm thành viên thành công.'
+    });
+  } catch (error) {
+    console.error('-> LỖI SERVER KHI ĐÁNH GIÁ:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi hệ thống khi cập nhật trạng thái đánh giá.'
+    });
+  }
+};
+// Cập nhật lại module.exports ở cuối file
+module.exports = {
+  getOrderHistory,
+  markOrderReceived,
+  markOrderReviewed // <--- QUÊN EXPORT SẼ BỊ LỖI TIẾP NHÉ
+};
