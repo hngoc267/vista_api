@@ -3,38 +3,40 @@ const { Product, Product_variant, Category, Brand } = require("../models/schema"
 // 1. LẤY TẤT CẢ SẢN PHẨM
 exports.getAllProducts = async (req, res) => {
   try {
-    // Thêm 'isNew' vào destructuring từ req.query
-    const { category, brand, minPrice, maxPrice, search, page = 1, limit = 12, sort = "newest", isAI, isNew } = req.query;
+    const { category, brand, minPrice, maxPrice, search, page = 1, limit = 12, sort = "newest", isAI, isNew, isPromo } = req.query;
 
     const filter = { Status: "on_sale" };
     if (category) filter.Category_id = category;
     
-    // --- SỬA LẠI LOGIC LỌC THƯƠNG HIỆU Ở ĐÂY ---
     if (brand) {
-      // 1. Tìm trong bảng Brand xem hãng (VD: 'Apple') có mã Brand_id là gì
-      // Dùng $regex 'i' để không phân biệt viết hoa viết thường (Apple hay apple đều được)
       const brandDoc = await Brand.findOne({ Brand_name: { $regex: new RegExp(`^${brand}$`, 'i') } }).lean();
-      
       if (brandDoc) {
-        // 2. Nếu tìm thấy, lấy mã ID để lọc sản phẩm
         filter.Brand_id = brandDoc.Brand_id;
       } else {
-        // 3. Nếu khách cố tình gõ sai tên hãng, ép filter tìm 1 mã ảo để trả về mảng rỗng
         filter.Brand_id = "NOT_FOUND";
       }
     }
     if (search) filter.Product_name = { $regex: search, $options: "i" };
-    if (req.query.isFlashSale === 'true') filter.Is_Flash_Sale = true;
-    if (isAI === 'true') filter.Is_AI = true;
-
-    // THÊM MỚI: Logic lọc sản phẩm Mới (Không sale và không phải AI)
-    if (isNew === 'true') {
-      filter.Is_Flash_Sale = { $ne: true };
-      filter.Is_AI = { $ne: true };
+    
+    // LOGIC CHUẨN:
+    if (req.query.isFlashSale === 'true') {
+        filter.Is_Flash_Sale = true;
+    } else if (isPromo === 'true') {
+        filter.Discount = { $gt: 0 };
+        filter.Is_Flash_Sale = { $ne: true }; 
+        filter.Is_AI = { $ne: true };
+    } else if (isAI === 'true') {
+        filter.Is_AI = true;
+        // Có thể thêm filter.Discount = 0 nếu sếp muốn AI không được giảm giá
+    } else if (isNew === 'true') {
+        filter.Discount = 0;                  // BẮT BUỘC: Hàng mới không được có giảm giá
+        filter.Is_Flash_Sale = { $ne: true };
+        filter.Is_AI = { $ne: true };
     }
     
     let products = await Product.find(filter).lean();
 
+    // TÍNH GIÁ CHUẨN 100% TỪ DATABASE
     let productsWithPrice = await Promise.all(
       products.map(async (product) => {
         const variants = await Product_variant.find({
@@ -42,26 +44,33 @@ exports.getAllProducts = async (req, res) => {
           Status: "active",
         }).sort({ Price: 1 }).lean();
 
+        const originalPrice = variants[0]?.Price || 0;
+        const discount = product.Discount || 0;
+
+        const finalPrice = discount > 0 ? originalPrice - (originalPrice * discount / 100) : originalPrice;
+
         return {
           ...product,
-          min_price: variants[0]?.Price || 0,
+          min_price: originalPrice,
+          final_price: finalPrice, 
           variants: variants,
         };
       })
     );
 
+    // LỌC VÀ SẮP XẾP GIÁ...
     if (minPrice || maxPrice) {
       productsWithPrice = productsWithPrice.filter((p) => {
-        if (minPrice && p.min_price < Number(minPrice)) return false;
-        if (maxPrice && p.min_price > Number(maxPrice)) return false;
+        if (minPrice && p.final_price < Number(minPrice)) return false;
+        if (maxPrice && p.final_price > Number(maxPrice)) return false;
         return true;
       });
     } 
 
     if (sort === "price_asc") {
-      productsWithPrice.sort((a, b) => a.min_price - b.min_price);
+      productsWithPrice.sort((a, b) => a.final_price - b.final_price);
     } else if (sort === "price_desc") {
-      productsWithPrice.sort((a, b) => b.min_price - a.min_price);
+      productsWithPrice.sort((a, b) => b.final_price - a.final_price);
     } else if (sort === "rating") {
       productsWithPrice.sort((a, b) => (b.Average_rating || 0) - (a.Average_rating || 0));
     } else {
@@ -133,7 +142,10 @@ exports.getFeaturedProducts = async (req, res) => {
 // 4. FLASH SALE
 exports.getFlashSaleProducts = async (req, res) => {
   try {
-    const products = await Product.find({ Status: "on_sale", Is_Flash_Sale: true }).limit(8).lean();
+    const products = await Product.find({ Status: "on_sale", Is_Flash_Sale: true })
+  .sort({ Discount: -1 })
+  .limit(16)
+  .lean();
     const productsWithPrice = await Promise.all(
       products.map(async (product) => {
         const variant = await Product_variant.findOne({ Product_id: product.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
