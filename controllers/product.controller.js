@@ -3,7 +3,7 @@ const { Product, Product_variant, Category, Brand } = require("../models/schema"
 // 1. LẤY TẤT CẢ SẢN PHẨM
 exports.getAllProducts = async (req, res) => {
   try {
-    const { category, brand, minPrice, maxPrice, search, page = 1, limit = 12, sort = "newest", isAI, isNew } = req.query;
+    const { category, brand, minPrice, maxPrice, search, page = 1, limit = 12, sort = "newest", isAI, isNew, isPromo } = req.query;
 
     const filter = { Status: "on_sale" };
     if (category) filter.Category_id = category;
@@ -17,17 +17,26 @@ exports.getAllProducts = async (req, res) => {
       }
     }
     if (search) filter.Product_name = { $regex: search, $options: "i" };
-    if (req.query.isFlashSale === 'true') filter.Is_Flash_Sale = true;
-    if (isAI === 'true') filter.Is_AI = true;
-
-    if (isNew === 'true') {
-      filter.Is_Flash_Sale = { $ne: true };
-      filter.Is_AI = { $ne: true };
+    
+    // LOGIC CHUẨN:
+    if (req.query.isFlashSale === 'true') {
+        filter.Is_Flash_Sale = true;
+    } else if (isPromo === 'true') {
+        filter.Discount = { $gt: 0 };
+        filter.Is_Flash_Sale = { $ne: true }; 
+        filter.Is_AI = { $ne: true };
+    } else if (isAI === 'true') {
+        filter.Is_AI = true;
+        // Có thể thêm filter.Discount = 0 nếu sếp muốn AI không được giảm giá
+    } else if (isNew === 'true') {
+        filter.Discount = 0;                  // BẮT BUỘC: Hàng mới không được có giảm giá
+        filter.Is_Flash_Sale = { $ne: true };
+        filter.Is_AI = { $ne: true };
     }
     
     let products = await Product.find(filter).lean();
 
-    // TÍNH TOÁN GIÁ CUỐI CÙNG (FINAL PRICE)
+    // TÍNH GIÁ CHUẨN 100% TỪ DATABASE
     let productsWithPrice = await Promise.all(
       products.map(async (product) => {
         const variants = await Product_variant.find({
@@ -37,19 +46,19 @@ exports.getAllProducts = async (req, res) => {
 
         const originalPrice = variants[0]?.Price || 0;
         const discount = product.Discount || 0;
-        // Tính giá thực tế khách phải trả:
+
         const finalPrice = discount > 0 ? originalPrice - (originalPrice * discount / 100) : originalPrice;
 
         return {
           ...product,
           min_price: originalPrice,
-          final_price: finalPrice, // <-- Biến mới cực kỳ quan trọng
+          final_price: finalPrice, 
           variants: variants,
         };
       })
     );
 
-    // LỌC THEO GIÁ SAU KHI ĐÃ GIẢM
+    // LỌC VÀ SẮP XẾP GIÁ...
     if (minPrice || maxPrice) {
       productsWithPrice = productsWithPrice.filter((p) => {
         if (minPrice && p.final_price < Number(minPrice)) return false;
@@ -58,7 +67,6 @@ exports.getAllProducts = async (req, res) => {
       });
     } 
 
-    // SẮP XẾP BẰNG GIÁ SAU KHI ĐÃ GIẢM (FINAL PRICE)
     if (sort === "price_asc") {
       productsWithPrice.sort((a, b) => a.final_price - b.final_price);
     } else if (sort === "price_desc") {
@@ -66,7 +74,6 @@ exports.getAllProducts = async (req, res) => {
     } else if (sort === "rating") {
       productsWithPrice.sort((a, b) => (b.Average_rating || 0) - (a.Average_rating || 0));
     } else {
-      // Mặc định "Mới nhất": Sắp xếp theo ID/Thời gian tạo giảm dần
       productsWithPrice.sort((a, b) => b._id.toString().localeCompare(a._id.toString()));
     }
 
