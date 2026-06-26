@@ -641,11 +641,7 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-module.exports = {
-  getOrderHistory,
-  markOrderReceived,
-  cancelOrder,
-};
+
 // Nhớ đảm bảo bạn đã có import model User ở đầu file nhé
 // Ví dụ: const { Order, Payment, Delivery, User } = require('../models/schema');
 
@@ -716,5 +712,6 @@ const markOrderReviewed = async (req, res) => {
 module.exports = {
   getOrderHistory,
   markOrderReceived,
+  cancelOrder,
   markOrderReviewed // <--- QUÊN EXPORT SẼ BỊ LỖI TIẾP NHÉ
 };
