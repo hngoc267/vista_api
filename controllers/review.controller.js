@@ -4,12 +4,17 @@ const {
   Product,
   Product_variant,
   Review,
+  User,
 } = require('../models/schema');
 
 const REVIEWABLE_ORDER_STATUSES = new Set(['delivered', 'review']);
 
 function cleanText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function cleanMediaValue(value) {
+  return String(value || '').trim();
 }
 
 function cleanMultiline(value) {
@@ -73,7 +78,7 @@ function extractImageValue(value) {
   }
 
   if (typeof value === 'object') {
-    return cleanText(
+    return cleanMediaValue(
       value.url
       || value.src
       || value.preview
@@ -81,15 +86,27 @@ function extractImageValue(value) {
       || value.dataURL
       || value.fileUrl
       || value.file_url
+      || value.filePath
+      || value.file_path
       || value.path
+      || value.Location
+      || value.location
+      || value.secure_url
       || value.image
+      || value.Image
       || value.video
+      || value.Video
       || value.media
+      || value.Media
+      || value.attachment
+      || value.Attachment
+      || value.base64
+      || value.Base64
       || ''
     );
   }
 
-  return cleanText(value);
+  return cleanMediaValue(value);
 }
 
 function parseImagesValue(value) {
@@ -113,6 +130,34 @@ function parseImagesValue(value) {
   } catch {
     return [raw];
   }
+}
+
+function buildReviewDto(review, extra = {}) {
+  return {
+    Review_id: review.Review_id,
+    Order_detail_id: review.Order_detail_id,
+    Product_id: extra.Product_id || '',
+    Product_variant_id: extra.Product_variant_id || '',
+    User_name: extra.User_name || review.User_name || '',
+    Rating: review.Rating,
+    Comment: review.Comment || '',
+    Images: parseImagesValue(review.Images),
+    Created_at: review.Created_at,
+  };
+}
+
+function maskReviewerName(value) {
+  const text = cleanText(value);
+  if (!text) {
+    return 'Khach hang VISTA';
+  }
+
+  const parts = text.split(' ');
+  if (parts.length === 1) {
+    return parts[0] + ' ***';
+  }
+
+  return parts.slice(0, 2).join(' ') + ' ***';
 }
 
 async function updateOrderReviewStatus(orderId) {
@@ -283,10 +328,7 @@ const getReviewByOrderDetailId = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: {
-        ...review,
-        Images: parseImagesValue(review.Images),
-      },
+      data: buildReviewDto(review),
     });
   } catch (error) {
     console.error('Lỗi khi tải đánh giá sản phẩm:', error);
@@ -297,7 +339,76 @@ const getReviewByOrderDetailId = async (req, res) => {
   }
 };
 
+const getReviewsByProductId = async (req, res) => {
+  try {
+    const productId = cleanText(req.params.productId);
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Thieu ma san pham.',
+      });
+    }
+
+    const variants = await Product_variant.find({ Product_id: productId })
+      .select('Product_variant_id Product_id')
+      .lean();
+    const variantIds = variants.map((item) => item.Product_variant_id).filter(Boolean);
+    if (!variantIds.length) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const orderDetails = await Order_detail.find({ Product_variant_id: { $in: variantIds } })
+      .select('Order_detail_id Order_id Product_variant_id')
+      .lean();
+    const orderDetailIds = orderDetails.map((item) => item.Order_detail_id).filter(Boolean);
+    if (!orderDetailIds.length) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const reviews = await Review.find({ Order_detail_id: { $in: orderDetailIds } })
+      .sort({ Created_at: -1 })
+      .lean();
+
+    const orderIds = [...new Set(orderDetails.map((item) => item.Order_id).filter(Boolean))];
+    const orders = await Order.find({ Order_id: { $in: orderIds } })
+      .select('Order_id User_id')
+      .lean();
+    const userIds = [...new Set(orders.map((item) => item.User_id).filter(Boolean))];
+    const users = await User.find({ User_id: { $in: userIds } })
+      .select('User_id Full_name Username')
+      .lean();
+
+    const detailMap = new Map(orderDetails.map((item) => [item.Order_detail_id, item]));
+    const orderMap = new Map(orders.map((item) => [item.Order_id, item]));
+    const userMap = new Map(users.map((item) => [item.User_id, item]));
+
+    const data = reviews.map((review) => {
+      const detail = detailMap.get(review.Order_detail_id) || {};
+      const order = orderMap.get(detail.Order_id) || {};
+      const user = userMap.get(order.User_id) || {};
+
+      return buildReviewDto(review, {
+        Product_id: productId,
+        Product_variant_id: detail.Product_variant_id || '',
+        User_name: maskReviewerName(user.Full_name || user.Username || review.User_name || ''),
+      });
+    });
+
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.error('Loi khi tai danh gia theo san pham:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Da xay ra loi he thong khi tai danh gia san pham.',
+    });
+  }
+};
+
 module.exports = {
   createReview,
   getReviewByOrderDetailId,
+  getReviewsByProductId,
 };

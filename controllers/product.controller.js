@@ -5,6 +5,10 @@ function cleanText(value) {
   return String(value || '').replace(/\s+/g, ' ').trim();
 }
 
+function cleanMediaValue(value) {
+  return String(value || '').trim();
+}
+
 function parseReviewImages(value) {
   if (Array.isArray(value)) {
     return [...new Set(value.flatMap((item) => parseReviewImages(item)).filter(Boolean))];
@@ -15,7 +19,7 @@ function parseReviewImages(value) {
   }
 
   if (typeof value === 'object') {
-    const image = cleanText(
+    const image = cleanMediaValue(
       value.url
       || value.src
       || value.preview
@@ -23,10 +27,22 @@ function parseReviewImages(value) {
       || value.dataURL
       || value.fileUrl
       || value.file_url
+      || value.filePath
+      || value.file_path
       || value.path
+      || value.Location
+      || value.location
+      || value.secure_url
       || value.image
+      || value.Image
       || value.video
+      || value.Video
       || value.media
+      || value.Media
+      || value.attachment
+      || value.Attachment
+      || value.base64
+      || value.Base64
       || ''
     );
     return image ? [image] : [];
