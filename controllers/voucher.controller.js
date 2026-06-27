@@ -756,10 +756,16 @@ exports.getMyVouchers = async (req, res) => {
       }
     }
 
-    // XỬ LÝ LỌC & ĐÓNG GÓI DATA
+   // XỬ LÝ LỌC & ĐÓNG GÓI DATA
     const data = vouchers
       .filter(voucher => {
-         // 👇 CHẶN NGAY TỪ ĐẦU: Chỉ cho phép voucher đi qua nếu Hạng của khách >= Hạng yêu cầu
+         // 👇 NẾU LÀ VOUCHER TÀI KHOẢN ĐÃ TỪNG DÙNG -> Bỏ qua check hạng, cho lọt lưới luôn
+         const normalizedCode = cleanString(voucher.code).toUpperCase();
+         if (usedVoucherCodes.has(normalizedCode)) {
+            return true;
+         }
+
+         // 👇 NẾU CHƯA DÙNG -> Vẫn giữ luật cũ: Chỉ cho phép đi qua nếu Hạng của khách === Hạng yêu cầu
          const requiredTier = Number(voucher.Required_tier) || 0;
          return requiredTier === 0 || requiredTier === userTierLevel;
       })
