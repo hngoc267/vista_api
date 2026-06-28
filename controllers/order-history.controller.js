@@ -1,4 +1,4 @@
-const { Order, Payment, Delivery, Order_detail, Product_variant, Return_order } = require('../models/schema');
+const { Order, User, Payment, Delivery, Order_detail, Product_variant, Return_order } = require('../models/schema');
 
 const PROCESSING_STATUSES = new Set(['processing']);
 const PROCESSING_AUTO_SHIP_MS = 90 * 1000;
@@ -546,6 +546,17 @@ const markOrderReceived = async (req, res) => {
       { Order_id: orderId },
       { $set: { Status: 'delivered' } }
     );
+    // THÊM MỚI: CỘNG ĐIỂM KHI ĐÃ NHẬN HÀNG
+    const amountToAdd = Number(order.Total_amount) || 0;
+    const userId = order.User_id;
+
+    if (userId && amountToAdd > 0) {
+      await User.updateOne(
+        { User_id: userId },
+        { $inc: { Total_spent: amountToAdd } } 
+      );
+      console.log(`Đã cộng ${amountToAdd} điểm cho User ${userId}`);
+    }
 
     return res.status(200).json({
       success: true,
@@ -688,8 +699,49 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+
+// Nhớ đảm bảo bạn đã có import model User ở đầu file nhé
+// Ví dụ: const { Order, Payment, Delivery, User } = require('../models/schema');
+
+const markOrderReviewed = async (req, res) => {
+  try {
+    const orderId = req.body.orderId || req.body.Order_id; 
+
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: 'Thiếu mã đơn hàng.' });
+    }
+
+    const order = await Order.findOne({ Order_id: orderId }).lean();
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng.' });
+    }
+
+    if (order.Review_status === 'reviewed') {
+      return res.status(400).json({ success: false, message: 'Đơn hàng này đã được đánh giá trước đó.' });
+    }
+
+    // --- CHỈ ĐỔI TRẠNG THÁI REVIEW - KHÔNG CỘNG ĐIỂM Ở ĐÂY NỮA ---
+    await Order.updateOne(
+      { Order_id: orderId },
+      { $set: { Review_status: 'reviewed' } }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Đã cập nhật trạng thái đánh giá thành công.'
+    });
+  } catch (error) {
+    console.error('-> LỖI SERVER KHI ĐÁNH GIÁ:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi hệ thống khi cập nhật trạng thái đánh giá.'
+    });
+  }
+};
+// Cập nhật lại module.exports ở cuối file
 module.exports = {
   getOrderHistory,
   markOrderReceived,
   cancelOrder,
+  markOrderReviewed // <--- QUÊN EXPORT SẼ BỊ LỖI TIẾP NHÉ
 };

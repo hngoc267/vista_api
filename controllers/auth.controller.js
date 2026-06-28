@@ -118,6 +118,7 @@ exports.login = async (req, res) => {
         Email: user.Email,
         Full_name: user.Full_name,
         Phone_number: user.Phone_number,
+        Total_spent: user.Total_spent
       },
     });
   } catch (error) {
@@ -138,14 +139,26 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// Cập nhật hồ sơ
+// Cập nhật hồ sơ (Đã bổ sung nhận Điểm Thành Viên)
 exports.updateProfile = async (req, res) => {
   try {
-    const { Full_name, Phone_number } = req.body;
+    // 1. Lấy thêm totalSpent từ Frontend gửi xuống
+    const { Full_name, Phone_number, totalSpent } = req.body;
 
+    // 2. Tạo một object chứa các trường cần update
+    const updateData = {};
+    if (Full_name !== undefined) updateData.Full_name = Full_name;
+    if (Phone_number !== undefined) updateData.Phone_number = Phone_number;
+    
+    // 3. Nếu Frontend có gửi điểm lên thì map nó vào cột Total_spent trong DB
+    if (totalSpent !== undefined) {
+      updateData.Total_spent = totalSpent;
+    }
+
+    // 4. Update bằng $set để không làm mất dữ liệu cũ
     const user = await User.findOneAndUpdate(
       { User_id: req.user.User_id },
-      { Full_name, Phone_number },
+      { $set: updateData },
       { new: true, projection: { Password: 0 } }
     );
 
@@ -154,7 +167,6 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // Đổi mật khẩu
 exports.changePassword = async (req, res) => {
   try {

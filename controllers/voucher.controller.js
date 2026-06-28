@@ -565,8 +565,19 @@ function getVoucherListUnavailableReason(voucher, context = {}) {
   }
 
   if (voucher?.status === "used") {
-    return "Mã giảm giá này đã được sử dụng.";
+    return "Mã giảm giá này đã hết lượt sử dụng.";
   }
+
+  // --- THÊM LOGIC CHECK HẠNG Ở ĐÂY ---
+  if (context.userTierLevel !== undefined) {
+    const requiredTier = Number(voucher?.Required_tier) || 0;
+    if (context.userTierLevel < requiredTier) {
+       const tierNames = ["Bronze", "Silver", "Gold", "Diamond"];
+       const requiredName = tierNames[requiredTier] || "Hạng cao hơn";
+       return `Mã này dành riêng cho thành viên hạng ${requiredName} trở lên.`;
+    }
+  }
+  // ------------------------------------
 
   if (context.userId && hasFirstOrderRule(voucher)) {
     if (context.userHasAnyOrder) {
@@ -574,10 +585,8 @@ function getVoucherListUnavailableReason(voucher, context = {}) {
     }
   }
 
-  if (context.userId && hasPerAccountUsageRule(voucher)) {
-    if (context.usedVoucherCodes?.has(normalizedCode)) {
+  if (context.userId && context.usedVoucherCodes?.has(normalizedCode)) {
       return "Tài khoản của bạn đã sử dụng mã giảm giá này.";
-    }
   }
 
   if (context.hasOrderContext) {
@@ -644,9 +653,28 @@ function mapVoucherForClient(voucher, context = {}) {
   const daysLeft = getDaysLeft(voucher.expiry);
   const unavailableReason = getVoucherListUnavailableReason(voucher, context);
   const isExpired = isVoucherExpired(voucher);
-  const status = unavailableReason
-    ? (isExpired ? "expired" : "unavailable")
-    : (daysLeft !== null && daysLeft <= 3 && voucher.status === "available" ? "expiring" : voucher.status);
+  
+  // 1. Lấy mã voucher viết hoa để so sánh chuẩn xác
+  const normalizedCode = cleanString(voucher?.code).toUpperCase();
+  
+  // 2. Kiểm tra CHÍNH XÁC xem tài khoản này đã từng dùng mã này chưa
+  const hasUserUsedIt = context.usedVoucherCodes?.has(normalizedCode);
+
+  let status = voucher.status;
+
+  if (hasUserUsedIt) {
+    // Nếu ĐÚNG là user này đã dùng -> Hiện ở tab Đã dùng
+    status = "used"; 
+  } else if (unavailableReason) {
+    // Nếu user chưa dùng nhưng không thỏa mãn điều kiện khác (hết lượt hệ thống, chưa đủ hạng, sai đơn...)
+    if (isExpired) {
+      status = "expired";
+    } else {
+      status = "unavailable"; // Sẽ hiển thị là Không khả dụng chứ không bị nhảy vào tab Đã dùng nữa
+    }
+  } else if (daysLeft !== null && daysLeft <= 3 && voucher.status === "available") {
+    status = "expiring";
+  }
 
   return {
     code: voucher.code,
@@ -654,7 +682,7 @@ function mapVoucherForClient(voucher, context = {}) {
     condition: voucher.condition,
     type: voucher.type,
     category: voucher.category,
-    status,
+    status, // Trả về status đã được phân loại chuẩn xác
     expiry: voucher.expiry,
     daysLeft,
     description: voucher.description,
@@ -696,9 +724,13 @@ exports.getMyVouchers = async (req, res) => {
           totalQuantity: 0,
           orderItems: [],
         };
+    
+    // Lấy toàn bộ voucher trong DB
     const vouchers = await Voucher.find({}).sort({ createdAt: 1 }).lean();
+    
     let userHasAnyOrder = false;
     let usedVoucherCodes = new Set();
+    let userTierLevel = 0; // Mặc định là hạng 0 (Bronze)
 
     if (userId) {
       const orders = await Order.find({ User_id: userId })
@@ -712,20 +744,44 @@ exports.getMyVouchers = async (req, res) => {
           .map((code) => cleanString(code).toUpperCase())
           .filter(Boolean)
       );
+
+      // Móc Hạng Thành Viên từ Database User
+      const { User } = require("../models/schema");
+      const userDoc = await User.findOne({ User_id: userId }).lean();
+      if (userDoc) {
+          const spent = Number(userDoc.Total_spent) || 0;
+          if (spent >= 100000000) userTierLevel = 3;      // Diamond
+          else if (spent >= 50000000) userTierLevel = 2;  // Gold
+          else if (spent >= 10000000) userTierLevel = 1;  // Silver
+      }
     }
 
-    const data = vouchers.map((voucher) =>
-      mapVoucherForClient(voucher, {
-        userId,
-        userHasAnyOrder,
-        usedVoucherCodes,
-        hasOrderContext,
-        totalItemsPrice: resolvedContext.totalItemsPrice,
-        totalQuantity: resolvedContext.totalQuantity,
-        shippingFee,
-        orderItems: resolvedContext.orderItems,
+   // XỬ LÝ LỌC & ĐÓNG GÓI DATA
+    const data = vouchers
+      .filter(voucher => {
+         // 👇 NẾU LÀ VOUCHER TÀI KHOẢN ĐÃ TỪNG DÙNG -> Bỏ qua check hạng, cho lọt lưới luôn
+         const normalizedCode = cleanString(voucher.code).toUpperCase();
+         if (usedVoucherCodes.has(normalizedCode)) {
+            return true;
+         }
+
+         // 👇 NẾU CHƯA DÙNG -> Vẫn giữ luật cũ: Chỉ cho phép đi qua nếu Hạng của khách === Hạng yêu cầu
+         const requiredTier = Number(voucher.Required_tier) || 0;
+         return requiredTier === 0 || requiredTier === userTierLevel;
       })
-    );
+      .map((voucher) =>
+        mapVoucherForClient(voucher, {
+          userId,
+          userHasAnyOrder,
+          usedVoucherCodes,
+          hasOrderContext,
+          totalItemsPrice: resolvedContext.totalItemsPrice,
+          totalQuantity: resolvedContext.totalQuantity,
+          shippingFee,
+          orderItems: resolvedContext.orderItems,
+          userTierLevel
+        })
+      );
 
     return res.json({
       success: true,

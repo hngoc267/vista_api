@@ -1,4 +1,4 @@
-const { Order, Order_detail, Return_order } = require('../models/schema');
+const { Order, Order_detail, Return_order, User } = require('../models/schema');
 
 const RETURNABLE_ORDER_STATUSES = new Set(['delivered', 'review']);
 const ACTIVE_RETURN_STATUSES = ['pending', 'approved', 'completed', 'refunded'];
@@ -331,6 +331,29 @@ const createReturnOrder = async (req, res) => {
       { Order_id: orderId },
       { $set: { Status: 'returning' } }
     );
+    // ==========================================
+    // LOGIC TRỪ ĐIỂM: CHỈ TRỪ ĐÚNG SỐ TIỀN HOÀN TRẢ
+    // ==========================================
+    const userId = order.User_id;
+    // Tính tổng số tiền hoàn của đợt trả hàng này
+    const totalRefundAmount = returnDocuments.reduce((sum, doc) => sum + (Number(doc.Refund_amount) || 0), 0);
+
+    if (userId && totalRefundAmount > 0) {
+      // 1. Trừ điểm tương ứng với số tiền hoàn trả
+      await User.updateOne(
+        { User_id: userId },
+        { $inc: { Total_spent: -totalRefundAmount } }
+      );
+      
+      // 2. Chốt chặn an toàn: Nếu lỡ điểm bị âm thì set về 0
+      await User.updateOne(
+        { User_id: userId, Total_spent: { $lt: 0 } },
+        { $set: { Total_spent: 0 } }
+      );
+      
+      console.log(`Đã TRỪ ${totalRefundAmount} điểm của User ${userId} do hoàn hàng`);
+    }
+    // ==========================================
 
     return res.status(201).json({
       success: true,
