@@ -1,7 +1,7 @@
 const { Order, Order_detail, Return_order } = require('../models/schema');
 
 const RETURNABLE_ORDER_STATUSES = new Set(['delivered', 'review']);
-const ACTIVE_RETURN_STATUSES = ['pending', 'approved'];
+const ACTIVE_RETURN_STATUSES = ['pending', 'approved', 'completed', 'refunded'];
 
 const RETURN_REASON_LABELS = {
   damaged: 'Hàng lỗi, không hoạt động',
@@ -102,6 +102,18 @@ function getSelectedItemsSubtotal(selectedItems, detailMap) {
   }, 0);
 }
 
+function getTotalPurchasedQuantity(orderDetails) {
+  return orderDetails.reduce((sum, detail) => {
+    return sum + Math.max(1, Number(detail.Quantity) || 1);
+  }, 0);
+}
+
+function getSelectedReturnQuantity(selectedItems) {
+  return selectedItems.reduce((sum, selectedItem) => {
+    return sum + Math.max(1, Number(selectedItem.Quantity) || 1);
+  }, 0);
+}
+
 function isFullOrderReturn(orderDetails, selectedItems) {
   if (orderDetails.length !== selectedItems.length) {
     return false;
@@ -116,11 +128,15 @@ function isFullOrderReturn(orderDetails, selectedItems) {
 
 function allocateRefundAmounts(order, orderDetails, selectedItems, detailMap) {
   const orderItemsSubtotal = getOrderItemsSubtotal(orderDetails);
-  const selectedItemsSubtotal = getSelectedItemsSubtotal(selectedItems, detailMap);
   const paidAmount = toMoney(order.Total_amount) || orderItemsSubtotal;
+  const totalPurchasedQuantity = Math.max(1, getTotalPurchasedQuantity(orderDetails));
+  const selectedReturnQuantity = getSelectedReturnQuantity(selectedItems);
+  const orderAdjustment = paidAmount - orderItemsSubtotal;
+  const adjustmentPerUnit = orderAdjustment / totalPurchasedQuantity;
+
   const targetRefundAmount = isFullOrderReturn(orderDetails, selectedItems)
     ? paidAmount
-    : Math.round((paidAmount * selectedItemsSubtotal) / Math.max(orderItemsSubtotal, 1));
+    : Math.max(0, Math.round(getSelectedItemsSubtotal(selectedItems, detailMap) + adjustmentPerUnit * selectedReturnQuantity));
 
   let allocated = 0;
   return selectedItems.map((selectedItem, index) => {
@@ -131,7 +147,7 @@ function allocateRefundAmounts(order, orderDetails, selectedItems, detailMap) {
     const detail = detailMap.get(selectedItem.Product_variant_id);
     const quantity = Math.max(1, Number(selectedItem.Quantity) || 1);
     const itemSubtotal = toMoney(detail?.Price) * quantity;
-    const amount = Math.round((paidAmount * itemSubtotal) / Math.max(orderItemsSubtotal, 1));
+    const amount = Math.max(0, Math.round(itemSubtotal + adjustmentPerUnit * quantity));
     allocated += amount;
     return Math.max(0, amount);
   });
@@ -142,9 +158,19 @@ function buildReturnSummary(returnRequests) {
   const refundAmount = requests.reduce((sum, item) => sum + toMoney(item.Refund_amount), 0);
   const sorted = [...requests].sort((a, b) => new Date(b.Created_at || 0) - new Date(a.Created_at || 0));
   const latest = sorted[0] || null;
+  const requestSummaries = sorted.map((item) => ({
+    Return_order_id: cleanText(item.Return_order_id || ''),
+    Product_variant_id: cleanText(item.Product_variant_id || ''),
+    Return_quantity: Math.max(1, Number(item.Return_quantity || 1) || 1),
+    Refund_amount: toMoney(item.Refund_amount),
+    Reason_type: cleanText(item.Reason_type || ''),
+    Description: cleanText(item.Description || ''),
+    Status: cleanText(item.Status || ''),
+    Created_at: item.Created_at || null,
+  }));
 
   return {
-    requests,
+    requests: requestSummaries,
     latest,
     refundAmount,
     reasonType: latest ? cleanText(latest.Reason_type) : '',
@@ -287,14 +313,14 @@ const createReturnOrder = async (req, res) => {
         Return_quantity: quantity,
         Reason_type: reasonType,
         Description: description,
-        Evidence_images: evidenceImages,
+        Evidence_images: index === 0 ? evidenceImages : [],
         Refund_amount: refundAmount,
         Return_name: returnName,
         Return_phone: returnPhone,
         Return_email: returnEmail,
         Return_address: returnAddress,
         Return_tracking_number: buildReturnTrackingNumber(index),
-        Status: 'pending',
+        Status: 'refunded',
         Created_at: createdAt,
       };
     });

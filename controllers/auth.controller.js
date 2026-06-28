@@ -2,6 +2,24 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models/schema");
 
+async function generateUniqueUserId() {
+  const users = await User.find({ User_id: /^USR_\d+$/ }).select("User_id").lean();
+  const maxNumber = users.reduce((max, user) => {
+    const match = String(user.User_id || "").match(/^USR_(\d+)$/);
+    return match ? Math.max(max, Number(match[1]) || 0) : max;
+  }, 0);
+
+  let nextNumber = maxNumber + 1;
+  let candidate = `USR_${String(nextNumber).padStart(3, "0")}`;
+
+  while (await User.exists({ User_id: candidate })) {
+    nextNumber += 1;
+    candidate = `USR_${String(nextNumber).padStart(3, "0")}`;
+  }
+
+  return candidate;
+}
+
 // Đăng ký
 exports.register = async (req, res) => {
   try {
@@ -23,8 +41,7 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(Password, 10);
 
     // Tạo User_id
-    const count = await User.countDocuments();
-    const User_id = `USR_${String(count + 1).padStart(3, "0")}`;
+    const User_id = await generateUniqueUserId();
 
     // Tạo user mới
     const newUser = await User.create({
