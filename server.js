@@ -62,3 +62,6 @@ app.use("/api/orders", orderRoutes);
 
 const paymentRoutes = require("./routes/payment.routes");
 app.use("/api/payments", paymentRoutes);
+
+const reviewRoutes = require('./routes/review.routes');
+app.use('/api/reviews', reviewRoutes);

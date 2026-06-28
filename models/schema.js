@@ -37,7 +37,7 @@ const UserSchema = new Schema(
 const AddressSchema = new Schema(
   {
     Address_id: { type: String, required: true, unique: true },
-    User_id: { type: String, required: true, ref: "User" }, // FK → User
+    User_id: { type: String, required: true, ref: "User" },
     Receiver_name: { type: String, required: true },
     Receiver_phone: { type: String, required: true },
     Email: { type: String, trim: true },
@@ -81,26 +81,22 @@ const BrandSchema = new Schema(
 const ProductSchema = new Schema(
   {
     Product_id: { type: String, required: true, unique: true },
-    Category_id: { type: String, required: true, ref: "Category" }, // FK → Category
-    Brand_id: { type: String, required: true, ref: "Brand" },       // FK → Brand
+    Category_id: { type: String, required: true, ref: "Category" },
+    Brand_id: { type: String, required: true, ref: "Brand" },
     Product_name: { type: String, required: true },
     Description: { type: String },
-    Images: [{ type: String }], // mảng URL ảnh
+    Images: [{ type: String }],
     Average_rating: { type: Number, default: 0, min: 0, max: 5 },
     Total_reviews: { type: Number, default: 0 },
-    // Technical_specs: lưu dạng object linh hoạt theo từng loại sản phẩm
-    // Laptop: { CPU, GPU, RAM, Storage, Screen_Size, Battery, Weight, Refresh_Rate }
-    // Smartphone: { Chipset, RAM, ROM, Camera, Battery, Screen_Type, Refresh_Rate, Display_Size }
-    // Có thêm AI tags: { Usage_Type, User_Segment, Performance_Level, Portability, Gaming_Support, AI_Tag }
     Technical_specs: { type: Schema.Types.Mixed },
     Status: {
       type: String,
       enum: ["on_sale", "out_of_stock"],
       default: "on_sale",
     },
-    Discount: { type: Number, default: 0 },            // Phần trăm giảm giá (vd: 10, 15, 30)
-    Is_Flash_Sale: { type: Boolean, default: false },   // Đánh dấu sản phẩm thuộc cụm Flash Sale
-    Is_AI: { type: Boolean, default: false },           // Đánh dấu sản phẩm được AI gợi ý
+    Discount: { type: Number, default: 0 },
+    Is_Flash_Sale: { type: Boolean, default: false },
+    Is_AI: { type: Boolean, default: false },
   },
   { collection: "Product" }
 );
@@ -111,9 +107,9 @@ const ProductSchema = new Schema(
 const ProductVariantSchema = new Schema(
   {
     Product_variant_id: { type: String, required: true, unique: true },
-    Product_id: { type: String, required: true, ref: "Product" }, // FK → Product
-    Variant_name: { type: String, required: true }, // vd: "128GB - Đen"
-    Attributes: { type: Schema.Types.Mixed },       // { Color: "Đen", Storage: "128GB" }
+    Product_id: { type: String, required: true, ref: "Product" },
+    Variant_name: { type: String, required: true },
+    Attributes: { type: Schema.Types.Mixed },
     Price: { type: Number, required: true },
     Stock_quantity: { type: Number, required: true, default: 0 },
     Status: {
@@ -131,7 +127,7 @@ const ProductVariantSchema = new Schema(
 const CartSchema = new Schema(
   {
     Cart_id: { type: String, required: true, unique: true },
-    User_id: { type: String, required: true, ref: "User" }, // FK → User
+    User_id: { type: String, required: true, ref: "User" },
     Total_product: { type: Number, default: 0 },
     Total_price: { type: Number, default: 0 },
   },
@@ -144,16 +140,16 @@ const CartSchema = new Schema(
 const CartItemSchema = new Schema(
   {
     Cart_item_id: { type: String, required: true, unique: true },
-    Product_variant_id: { type: String, required: true, ref: "Product_variant" }, // FK → Product_variant
-    Cart_id: { type: String, required: true, ref: "Cart" },                        // FK → Cart
+    Product_variant_id: { type: String, required: true, ref: "Product_variant" },
+    Cart_id: { type: String, required: true, ref: "Cart" },
     Quantity: { type: Number, required: true, min: 1 },
-    Price: { type: Number, required: true }, // giá hiện tại của variant
+    Price: { type: Number, required: true },
   },
   { collection: "Cart_item" }
 );
 
 // ============================================================
-// 9. VOUCHER — Mã giảm giá (Phiên bản Minh Hiển)
+// 9. VOUCHER — Mã giảm giá
 // ============================================================
 const VoucherSchema = new mongoose.Schema(
   {
@@ -195,8 +191,8 @@ const VoucherSchema = new mongoose.Schema(
 const OrderSchema = new Schema(
   {
     Order_id: { type: String, required: true, unique: true },
-    User_id: { type: String, required: true, ref: "User" },       // FK → User
-    Voucher_id: { type: String, ref: "Voucher", default: null },  // FK → Voucher (nullable)
+    User_id: { type: String, required: true, ref: "User" },
+    Voucher_id: { type: String, ref: "Voucher", default: null },
     Voucher_code: { type: String, default: "" },
     Voucher_title: { type: String, default: "" },
     Voucher_discount_amount: { type: Number, default: 0 },
@@ -210,13 +206,13 @@ const OrderSchema = new Schema(
     Status: {
       type: String,
       enum: ["pending_payment", "processing", "shipping", "review", "returning", "cancelled"],
-      default: "pending_payment" // Mặc định tạo đơn là chờ thanh toán
+      default: "pending_payment",
     },
     Processing_started_at: { type: Date, default: null },
     Review_status: {
       type: String,
       enum: ["not_reviewed", "reviewed"],
-      default: "not_reviewed"
+      default: "not_reviewed",
     },
     Created_at: { type: Date, default: Date.now },
   },
@@ -229,14 +225,14 @@ const OrderSchema = new Schema(
 const OrderDetailSchema = new Schema(
   {
     Order_detail_id: { type: String, required: true, unique: true },
-    Product_variant_id: { type: String, required: true, ref: "Product_variant" }, // FK → Product_variant
-    Order_id: { type: String, required: true, ref: "Order" },                      // FK → Order
-    Variant_name: { type: String, required: true }, // chụp lại tên lúc mua
-    Price: { type: Number, required: true },         // chụp lại giá lúc mua
+    Product_variant_id: { type: String, required: true, ref: "Product_variant" },
+    Order_id: { type: String, required: true, ref: "Order" },
+    Variant_name: { type: String, required: true },
+    Price: { type: Number, required: true },
     Original_price: { type: Number, default: 0 },
     Discount_percent: { type: Number, default: 0 },
     Quantity: { type: Number, required: true, min: 1 },
-    Total_price: { type: Number, required: true },   // Price × Quantity
+    Total_price: { type: Number, required: true },
   },
   { collection: "Order_detail" }
 );
@@ -247,7 +243,7 @@ const OrderDetailSchema = new Schema(
 const PaymentSchema = new Schema(
   {
     Payment_id: { type: String, required: true, unique: true },
-    Order_id: { type: String, required: true, ref: "Order" }, // FK → Order
+    Order_id: { type: String, required: true, ref: "Order" },
     Payment_type: {
       type: String,
       enum: ["COD", "MoMo", "VNPay", "BankTransfer"],
@@ -272,8 +268,8 @@ const PaymentSchema = new Schema(
 const DeliverySchema = new Schema(
   {
     Delivery_id: { type: String, required: true, unique: true },
-    Order_id: { type: String, required: true, ref: "Order" }, // FK → Order
-    Shipping_partner: { type: String }, // GHTK, GHN, Viettel Post
+    Order_id: { type: String, required: true, ref: "Order" },
+    Shipping_partner: { type: String },
     Tracking_number: { type: String },
     Original_shipping_fee: { type: Number, default: 0 },
     Shipping_discount: { type: Number, default: 0 },
@@ -309,8 +305,8 @@ const ReturnOrderSchema = new Schema(
     Return_tracking_number: { type: String, default: "" },
     Status: {
       type: String,
-      enum: ["pending", "approved", "rejected", "completed"],
-      default: "pending",
+      enum: ["pending", "approved", "rejected", "completed", "refunded"],
+      default: "refunded",
     },
     Created_at: { type: Date, default: Date.now },
   },
@@ -323,10 +319,10 @@ const ReturnOrderSchema = new Schema(
 const ReviewSchema = new Schema(
   {
     Review_id: { type: String, required: true, unique: true },
-    Order_detail_id: { type: String, required: true, ref: "Order_detail" }, // FK → Order_detail
+    Order_detail_id: { type: String, required: true, ref: "Order_detail" },
     Rating: { type: Number, required: true, min: 1, max: 5 },
-    Comment: { type: String },
-    Images: [{ type: String }], // mảng URL ảnh đính kèm
+    Comment: { type: String, default: "" },
+    Images: [{ type: String }],
     Created_at: { type: Date, default: Date.now },
   },
   { collection: "Review" }
@@ -338,7 +334,7 @@ const ReviewSchema = new Schema(
 const SessionSchema = new Schema(
   {
     Session_id: { type: String, required: true, unique: true },
-    User_id: { type: String, required: true, ref: "User" }, // FK → User
+    User_id: { type: String, required: true, ref: "User" },
     Title: { type: String, default: "Cuộc trò chuyện mới" },
     Create_at: { type: Date, default: Date.now },
     Updated_at: { type: Date, default: Date.now },
@@ -352,7 +348,7 @@ const SessionSchema = new Schema(
 const MessageSchema = new Schema(
   {
     Message_id: { type: String, required: true, unique: true },
-    Session_id: { type: String, required: true, ref: "Session" }, // FK → Session
+    Session_id: { type: String, required: true, ref: "Session" },
     Content: { type: String, required: true },
     Created_at: { type: Date, default: Date.now },
     Sender_type: {
@@ -370,10 +366,10 @@ const MessageSchema = new Schema(
 const AIComparisonSchema = new Schema(
   {
     AI_comparison_id: { type: String, required: true, unique: true },
-    User_id: { type: String, required: true, ref: "User" }, // FK → User
-    Target_products: [{ type: String, ref: "Product" }],    // mảng Product_id được so sánh
-    User_requirements: { type: String },                     // nhu cầu người dùng nhập vào
-    Ai_response_summary: { type: String },                   // kết quả phân tích AI trả về
+    User_id: { type: String, required: true, ref: "User" },
+    Target_products: [{ type: String, ref: "Product" }],
+    User_requirements: { type: String },
+    Ai_response_summary: { type: String },
     Created_at: { type: Date, default: Date.now },
   },
   { collection: "AI_comparison" }

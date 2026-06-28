@@ -1,11 +1,12 @@
 const { Order, User, Payment, Delivery, Order_detail, Product_variant, Return_order } = require('../models/schema');
 
 const PROCESSING_STATUSES = new Set(['processing']);
+const PROCESSING_AUTO_SHIP_MS = 90 * 1000;
 const IMMUTABLE_STATUSES = new Set(['returning', 'cancelled', 'delivered']);
 const SHIPPING_STATUSES = new Set(['shipping', 'delivering']);
 const REVIEW_DISPLAY_STATUSES = new Set(['review', 'delivered']);
 const PENDING_PAYMENT_AUTO_CANCEL_MS = 24 * 60 * 60 * 1000;
-const CANCELLABLE_STATUSES = new Set(['pending_payment', 'processing', 'shipping', 'delivering']);
+const CANCELLABLE_STATUSES = new Set(['pending_payment', 'processing']);
 
 function cleanText(value) {
   return String(value || '').trim();
@@ -34,16 +35,42 @@ function summarizeReturnRequests(returnRequests) {
   const evidenceImages = [...new Set(requests.flatMap((item) => Array.isArray(item.Evidence_images) ? item.Evidence_images : []))];
   const refundAmount = requests.reduce((sum, item) => sum + (Number(item.Refund_amount) || 0), 0);
   const reasonType = cleanText(latest?.Reason_type || '');
-  const returnItems = requests.map((item) => ({
+  const returnItemMap = new Map();
+
+  requests.forEach((item) => {
+    const variantId = cleanText(item.Product_variant_id || '');
+    if (!variantId) {
+      return;
+    }
+
+    const current = returnItemMap.get(variantId) || {
+      Return_order_id: cleanText(item.Return_order_id || ''),
+      Product_variant_id: variantId,
+      Return_quantity: 0,
+      Refund_amount: 0,
+      Status: cleanText(item.Status || ''),
+    };
+
+    current.Return_quantity += Math.max(1, Number(item.Return_quantity || 1) || 1);
+    current.Refund_amount += Number(item.Refund_amount) || 0;
+    current.Status = current.Status || cleanText(item.Status || '');
+    returnItemMap.set(variantId, current);
+  });
+
+  const returnItems = Array.from(returnItemMap.values());
+  const returnRequestSummaries = sortedRequests.map((item) => ({
     Return_order_id: cleanText(item.Return_order_id || ''),
     Product_variant_id: cleanText(item.Product_variant_id || ''),
     Return_quantity: Math.max(1, Number(item.Return_quantity || 1) || 1),
     Refund_amount: Number(item.Refund_amount) || 0,
+    Reason_type: cleanText(item.Reason_type || ''),
+    Description: cleanText(item.Description || ''),
     Status: cleanText(item.Status || ''),
+    Created_at: item.Created_at || null,
   }));
 
   return {
-    Return_requests: requests,
+    Return_requests: returnRequestSummaries,
     Return_items: returnItems,
     Return_order_id: latest?.Return_order_id || '',
     Return_product_variant_id: latest?.Product_variant_id || '',
@@ -176,7 +203,7 @@ function resolveHistoryStatus(order, paymentInfo) {
 
   if (PROCESSING_STATUSES.has(nextStatus) && processingReferenceTime && !Number.isNaN(processingReferenceTime.getTime())) {
     const elapsed = Date.now() - processingReferenceTime.getTime();
-    if (elapsed >= 10000) {
+    if (elapsed >= PROCESSING_AUTO_SHIP_MS) {
       nextStatus = 'shipping';
     }
   }
@@ -251,7 +278,21 @@ const getOrderHistory = async (req, res) => {
                 as: 'ProductInfo'
               }
             },
-            { $unwind: { path: '$ProductInfo', preserveNullAndEmptyArrays: true } }
+            { $unwind: { path: '$ProductInfo', preserveNullAndEmptyArrays: true } },
+            {
+              $lookup: {
+                from: 'Review',
+                localField: 'Order_detail_id',
+                foreignField: 'Order_detail_id',
+                as: 'ReviewInfo'
+              }
+            },
+            {
+              $unwind: {
+                path: '$ReviewInfo',
+                preserveNullAndEmptyArrays: true
+              }
+            },
           ],
           as: 'RawItems'
         }
@@ -277,7 +318,7 @@ const getOrderHistory = async (req, res) => {
         }
       },
       { $sort: { Created_at: -1 } }
-    ]);
+    ]).allowDiskUse(true);
 
     let formattedOrders = await Promise.all(orders.map(async (order, index) => {
       const userInfo = order.UserInfo && order.UserInfo.length > 0 ? order.UserInfo[0] : null;
@@ -395,6 +436,12 @@ const getOrderHistory = async (req, res) => {
             Product_id: item.ProductInfo ? item.ProductInfo.Product_id : (i + 1), 
             Product_variant_id: variantId,
             productVariantId: variantId,
+            Order_detail_id: item.Order_detail_id,
+            Review_id: item.ReviewInfo?.Review_id || '',
+            Review_status: item.ReviewInfo?.Review_id
+                ? 'reviewed'
+                : 'not_reviewed',
+            Review_rating: item.ReviewInfo?.Rating || 0,
             Product_name: productName,
             Variant_name: item.Variant_name,
             Price: item.Price,

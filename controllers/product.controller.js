@@ -1,4 +1,131 @@
-const { Product, Product_variant, Category, Brand } = require("../models/schema");
+const { Product, Product_variant, Category, Brand, Review, Order_detail, Order, User } = require("../models/schema");
+const DEFAULT_MOCK_REVIEW_COUNT = Number(process.env.DEFAULT_MOCK_REVIEW_COUNT || 67);
+
+function cleanText(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function cleanMediaValue(value) {
+  return String(value || '').trim();
+}
+
+function parseReviewImages(value) {
+  if (Array.isArray(value)) {
+    return [...new Set(value.flatMap((item) => parseReviewImages(item)).filter(Boolean))];
+  }
+
+  if (!value) {
+    return [];
+  }
+
+  if (typeof value === 'object') {
+    const image = cleanMediaValue(
+      value.url
+      || value.src
+      || value.preview
+      || value.dataUrl
+      || value.dataURL
+      || value.fileUrl
+      || value.file_url
+      || value.filePath
+      || value.file_path
+      || value.path
+      || value.Location
+      || value.location
+      || value.secure_url
+      || value.image
+      || value.Image
+      || value.video
+      || value.Video
+      || value.media
+      || value.Media
+      || value.attachment
+      || value.Attachment
+      || value.base64
+      || value.Base64
+      || ''
+    );
+    return image ? [image] : [];
+  }
+
+  const raw = String(value || '').trim();
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return parseReviewImages(parsed);
+  } catch {
+    return [raw];
+  }
+}
+
+function maskReviewerName(value) {
+  const text = cleanText(value);
+  if (!text) {
+    return 'Khách hàng VISTA';
+  }
+
+  const parts = text.split(' ');
+  if (parts.length === 1) {
+    return parts[0] + ' ***';
+  }
+
+  return parts.slice(0, 2).join(' ') + ' ***';
+}
+
+async function getPersistedReviewsByProductId(productId) {
+  const variants = await Product_variant.find({ Product_id: productId })
+    .select('Product_variant_id Variant_name')
+    .lean();
+  const variantIds = variants.map((item) => item.Product_variant_id).filter(Boolean);
+
+  if (!variantIds.length) {
+    return [];
+  }
+
+  const orderDetails = await Order_detail.find({ Product_variant_id: { $in: variantIds } }).lean();
+  const orderDetailIds = orderDetails.map((item) => item.Order_detail_id).filter(Boolean);
+
+  if (!orderDetailIds.length) {
+    return [];
+  }
+
+  const reviews = await Review.find({ Order_detail_id: { $in: orderDetailIds } })
+    .sort({ Created_at: -1 })
+    .lean();
+
+  const orderIds = [...new Set(orderDetails.map((item) => item.Order_id).filter(Boolean))];
+  const orders = await Order.find({ Order_id: { $in: orderIds } })
+    .select('Order_id User_id')
+    .lean();
+  const userIds = [...new Set(orders.map((item) => item.User_id).filter(Boolean))];
+  const users = await User.find({ User_id: { $in: userIds } })
+    .select('User_id Full_name Username')
+    .lean();
+
+  const detailMap = new Map(orderDetails.map((item) => [item.Order_detail_id, item]));
+  const orderMap = new Map(orders.map((item) => [item.Order_id, item]));
+  const userMap = new Map(users.map((item) => [item.User_id, item]));
+
+  return reviews.map((review) => {
+    const detail = detailMap.get(review.Order_detail_id) || {};
+    const order = orderMap.get(detail.Order_id) || {};
+    const user = userMap.get(order.User_id) || {};
+
+    return {
+      Review_id: review.Review_id,
+      Order_detail_id: review.Order_detail_id,
+      Product_variant_id: detail.Product_variant_id || '',
+      User_name: maskReviewerName(user.Full_name || user.Username || review.User_name || ''),
+      Rating: review.Rating,
+      Comment: review.Comment || '',
+      Images: parseReviewImages(review.Images),
+      Created_at: review.Created_at,
+    };
+  });
+}
 
 // 1. LẤY TẤT CẢ SẢN PHẨM
 exports.getAllProducts = async (req, res) => {
@@ -100,8 +227,28 @@ exports.getProductById = async (req, res) => {
     const variants = await Product_variant.find({ Product_id: req.params.id }).sort({ Price: 1 }).lean();
     const category = await Category.findOne({ Category_id: product.Category_id }).lean();
     const brand = await Brand.findOne({ Brand_id: product.Brand_id }).lean();
+    const reviews = await getPersistedReviewsByProductId(req.params.id);
+    const totalReviews = Number(product.Total_reviews || 0);
+    const mockReviewCount = totalReviews > reviews.length
+      ? totalReviews - reviews.length
+      : (reviews.length > 0 ? DEFAULT_MOCK_REVIEW_COUNT : 0);
 
-    res.json({ success: true, data: { ...product, variants, category, brand } });
+    res.json({
+      success: true,
+      data: {
+        ...product,
+        Total_reviews: mockReviewCount + reviews.length,
+        variants,
+        category,
+        brand,
+        Reviews: reviews,
+        Review_summary: {
+          persistedCount: reviews.length,
+          mockReviewCount,
+          totalReviews: mockReviewCount + reviews.length,
+        },
+      },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
