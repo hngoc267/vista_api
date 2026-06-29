@@ -386,3 +386,124 @@ exports.getProductsByCategory = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// 9. SMART SEARCH — Tìm kiếm thông minh bằng AI
+exports.smartSearch = async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ success: false, message: "Thiếu query" });
+ 
+    // BƯỚC 0: Tự detect brand từ query — không phụ thuộc AI
+    const brandList = [
+      "Apple", "Samsung", "Xiaomi", "ASUS", "HP",
+      "Dell", "Lenovo", "Acer", "Sony", "JBL",
+      "Oppo", "Vivo", "Realme", "LG", "MSI"
+    ];
+    const detectedBrand = brandList.find(b =>
+      query.toLowerCase().includes(b.toLowerCase())
+    );
+    console.log("Detected brand from query:", detectedBrand || "none");
+ 
+    // BƯỚC 1: Gọi Groq AI phân tích intent
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        max_tokens: 256,
+        temperature: 0.1,
+        messages: [{
+          role: "user",
+          content: `Phân tích yêu cầu mua sản phẩm công nghệ sau và trả về JSON:
+Yêu cầu: "${query}"
+ 
+Trả về DUY NHẤT JSON này, không giải thích:
+{
+  "maxPrice": <số nguyên hoặc null. VD: "20 triệu" = 20000000>,
+  "category": "<Laptop|Smartphone|Tablet|Thiết bị âm thanh|Phụ kiện công nghệ|Thiết bị gaming|null>",
+  "priority": "<performance|price|portability|camera|null>"
+}`
+        }]
+      })
+    });
+ 
+    const groqData = await groqRes.json();
+    if (!groqData.choices || !groqData.choices[0]) {
+      return res.status(500).json({ success: false, message: "Groq API lỗi" });
+    }
+ 
+    const raw = groqData.choices[0].message.content.replace(/```json|```/g, "").trim();
+    const intent = JSON.parse(raw);
+    
+    // Gán brand từ detection thủ công vào intent
+    intent.brand = detectedBrand || null;
+    console.log("Intent final:", intent);
+ 
+    // BƯỚC 2: Build filter
+    const filter = { Status: "on_sale" };
+ 
+    // Ưu tiên brand trước nếu có
+    if (intent.brand) {
+      const brandDoc = await Brand.findOne({
+        Brand_name: { $regex: intent.brand, $options: "i" }
+      }).lean();
+      if (brandDoc) {
+        filter.Brand_id = brandDoc.Brand_id;
+        console.log("Brand filter applied:", brandDoc.Brand_name, brandDoc.Brand_id);
+      } else {
+        filter.Brand_id = "NOT_FOUND";
+        console.log("Brand not found in DB:", intent.brand);
+      }
+    }
+ 
+    // Lọc thêm category nếu có
+    if (intent.category && intent.category !== "null") {
+      const cat = await Category.findOne({
+        Category_name: { $regex: intent.category, $options: "i" }
+      }).lean();
+      if (cat) {
+        filter.Category_id = cat.Category_id;
+        console.log("Category filter applied:", cat.Category_name);
+      }
+    }
+ 
+    // Fallback: nếu không có brand và category thì tìm theo tên
+    if (!filter.Brand_id && !filter.Category_id) {
+      filter.Product_name = { $regex: query, $options: "i" };
+      console.log("Fallback: search by Product_name");
+    }
+ 
+    let products = await Product.find(filter).lean();
+    console.log("Filter:", JSON.stringify(filter));
+    console.log("Products found:", products.length);
+ 
+    // BƯỚC 3: Gán giá
+    let results = await Promise.all(products.map(async (p) => {
+      const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
+      return { ...p, min_price: variant?.Price || 0 };
+    }));
+ 
+    // BƯỚC 4: Lọc giá
+    if (intent.maxPrice) {
+      results = results.filter(p => p.min_price <= intent.maxPrice);
+      console.log("After price filter:", results.length);
+    }
+ 
+    // BƯỚC 5: Sắp xếp theo rating
+    results.sort((a, b) => (b.Average_rating || 0) - (a.Average_rating || 0));
+ 
+    // BƯỚC 6: Gán badge
+    results = results.map((p, index) => {
+      let aiTag = "✦ AI đề xuất";
+      return { ...p, aiTag };
+    });
+ 
+    // Giới hạn kết quả: brand → 4, category → 6, fallback → 4
+    const resultLimit = intent.brand ? 4 : intent.category ? 6 : 4;
+    res.json({ success: true, data: results.slice(0, resultLimit), intent });
+ 
+  } catch (error) {
+    console.error("Smart Search error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

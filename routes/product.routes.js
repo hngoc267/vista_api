@@ -14,6 +14,9 @@ router.get("/flash-sale", productController.getFlashSaleProducts);
 // Lấy sản phẩm VISTA AI Gợi ý (THÊM MỚI)
 router.get("/ai-suggest", productController.getAISuggestedProducts);
 
+// Smart Search AI
+router.post("/smart-search", productController.smartSearch);
+
 // Lấy tất cả sản phẩm (có lọc, tìm kiếm, phân trang)
 router.get("/", productController.getAllProducts);
 
