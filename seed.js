@@ -72,7 +72,7 @@ const productsData = [
     product: {
       Product_id: "PRD_001", Category_id: "CAT_001", Brand_id: "BRD_001", Product_name: "Apple MacBook Air M3 13 inch 2024",
       Description: "MacBook Air M3 siêu mỏng nhẹ, hiệu năng vượt trội với chip Apple M3 tiên tiến, màn hình Liquid Retina 13.6 inch rực rỡ và thời lượng pin ấn tượng lên đến 18 giờ. Đây là thiết bị di động đẳng cấp, lý tưởng cho sinh viên, dân văn phòng và nhà sáng tạo nội dung cần di chuyển nhiều.",
-      Images: ["macbook-air-m3-midnight.jpg", "macbook-air-m3-starlight.jpg"], Average_rating: 4.8, Total_reviews: 124, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
+      Images: ["macbook-air-m3-midnight.jpg", "macbook-air-m3-starlight.jpg"], Average_rating: 4.8, Total_reviews: 124, Status: "on_sale", Discount: 12, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { CPU: "Apple M3 8-core", GPU: "Apple M3 10-core GPU", RAM: "8GB Unified Memory", Storage: "256GB SSD", Screen_Size: "13.6 inch", Battery: "52.6Wh (~18 giờ)", Weight: "1.24 kg", Refresh_Rate: "60Hz", Resolution: "2560x1664 Liquid Retina", OS: "macOS Sonoma", Usage_Type: "Văn phòng, Học tập, Đồ họa nhẹ", User_Segment: "Sinh viên, Dân văn phòng", Performance_Level: "Cao", Portability: "Rất cao", Gaming_Support: "Không", AI_Tag: "ultrabook, macbook, m3, nhẹ, sinh-viên" }
     },
     variants: [
@@ -96,7 +96,7 @@ const productsData = [
     product: {
       Product_id: "PRD_003", Category_id: "CAT_001", Brand_id: "BRD_002", Product_name: "ASUS ROG Zephyrus G14 2024",
       Description: "Laptop gaming mỏng nhẹ đỉnh cao với vỏ nhôm CNC tinh xảo. Sức mạnh bộc phá từ CPU AMD Ryzen 9 thế hệ mới kết hợp card rời NVIDIA RTX 4070 giúp chiến mượt mọi tựa game AAA cấu hình cao. Màn hình OLED 3K 120Hz mang đến không gian giải trí đỉnh sắc và độ chính xác màu tuyệt đối cho thiết kế đồ họa.",
-      Images: ["rog-zephyrus-g14-eclipse-gray.jpg", "rog-zephyrus-g14-platinum-white.jpg"], Average_rating: 4.7, Total_reviews: 56, Status: "on_sale", Discount: 15, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["rog-zephyrus-g14-eclipse-gray.jpg", "rog-zephyrus-g14-platinum-white.jpg"], Average_rating: 4.7, Total_reviews: 56, Status: "on_sale", Discount: 35, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { CPU: "AMD Ryzen 9 8945HS", GPU: "NVIDIA GeForce RTX 4070 8GB", RAM: "16GB DDR5 6400MHz", Storage: "1TB SSD NVMe", Screen_Size: "14 inch", Battery: "73Wh", Weight: "1.65 kg", Refresh_Rate: "125Hz", Resolution: "2880x1800 OLED", OS: "Windows 11 Home", Usage_Type: "Gaming nặng, Đồ họa 3D, Giải trí", User_Segment: "Game thủ, Designer công nghệ", Performance_Level: "Rất cao", Portability: "Cao", Gaming_Support: "Có", AI_Tag: "gaming, rog, rtx-4070, oled, mỏng-nhẹ" }
     },
     variants: [
@@ -108,7 +108,7 @@ const productsData = [
     product: {
       Product_id: "PRD_004", Category_id: "CAT_001", Brand_id: "BRD_002", Product_name: "ASUS VivoBook 15 X1504ZA",
       Description: "Laptop văn phòng phân khúc phổ thông được trang bị chip vi xử lý Intel Core i5 thế hệ 12 mạnh mẽ và ổ cứng SSD 512GB siêu tốc. Thiết kế máy hiện đại, bản lề mở phẳng 180 độ cùng màn hình lớn 15.6 inch chống chói thích hợp cho học tập nhóm, làm việc văn phòng cơ bản mỗi ngày.",
-      Images: ["asus-vivobook-15-indie-black.jpg", "asus-vivobook-15-silver.jpg"], Average_rating: 4.2, Total_reviews: 203, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
+      Images: ["asus-vivobook-15-indie-black.jpg", "asus-vivobook-15-silver.jpg"], Average_rating: 4.2, Total_reviews: 203, Status: "on_sale", Discount: 15, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { CPU: "Intel Core i5-1235U", GPU: "Intel Iris Xe Graphics", RAM: "8GB DDR4", Storage: "512GB SSD", Screen_Size: "15.6 inch", Battery: "42Wh (~7 giờ)", Weight: "1.70 kg", Refresh_Rate: "60Hz", Resolution: "1920x1080 FHD", OS: "Windows 11 Home", Usage_Type: "Văn phòng cơ bản, Xem phim, Tra cứu", User_Segment: "Sinh viên, Học sinh, Nhân viên văn phòng", Performance_Level: "Trung bình", Portability: "Cao", Gaming_Support: "Không", AI_Tag: "văn-phòng, giá-rẻ, phổ-thông, học-tập" }
     },
     variants: [{ Product_variant_id: "VAR_011", Variant_name: "8GB / 512GB - Indie Black", Attributes: { Color: "Indie Black", RAM: "8GB", Storage: "512GB" }, Price: 13990000, Stock_quantity: 40 }]
@@ -135,7 +135,7 @@ const productsData = [
     product: {
       Product_id: "PRD_007", Category_id: "CAT_001", Brand_id: "BRD_006", Product_name: "Acer Nitro V 15 ANV15-51",
       Description: "Chiến binh laptop gaming phân khúc tầm trung lý tưởng cho giới trẻ. Diện mạo máy hầm hố ấn tượng cùng hệ thống quạt tản nhiệt kép làm mát buồng máy siêu tốc. Sự kết hợp giữa bộ vi xử lý Intel i5 dòng H hiệu năng cao và card đồ họa rời RTX 4060 144Hz đem lại khung hình gaming mượt mà, không giật lag.",
-      Images: ["acer-nitro-v15-obsidian-black.jpg"], Average_rating: 4.3, Total_reviews: 88, Status: "on_sale", Discount: 10, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["acer-nitro-v15-obsidian-black.jpg"], Average_rating: 4.3, Total_reviews: 88, Status: "on_sale", Discount: 30, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { CPU: "Intel Core i5-13420H", GPU: "NVIDIA GeForce RTX 4060 8GB", RAM: "8GB DDR5", Storage: "512GB SSD", Screen_Size: "15.6 inch", Battery: "57Wh", Weight: "2.11 kg", Refresh_Rate: "144Hz", Resolution: "1920x1080 FHD IPS", OS: "Windows 11 Home", Usage_Type: "Chơi game Esport, Thiết kế đồ họa 2D", User_Segment: "Sinh viên công nghệ, Game thủ", Performance_Level: "Cao", Portability: "Trung bình", Gaming_Support: "Có", AI_Tag: "gaming-tầm-trung, acer-nitro, rtx-4060, 144hz" }
     },
     variants: [{ Product_variant_id: "VAR_019", Variant_name: "8GB / 512GB - Obsidian Black", Attributes: { Color: "Obsidian Black", RAM: "8GB", Storage: "512GB" }, Price: 22990000, Stock_quantity: 25 }]
@@ -153,7 +153,7 @@ const productsData = [
     product: {
       Product_id: "PRD_034", Category_id: "CAT_001", Brand_id: "BRD_003", Product_name: "Dell Inspiron 14 5430",
       Description: "Chiếc máy tính xách tay nhỏ gọn 14 inch sở hữu khung hình tỷ lệ vàng 16:10, cung cấp không gian làm việc rộng rãi theo chiều dọc. Bộ nhớ RAM 16GB dung lượng cao giúp xử lý trơn tru các dự án phân tích dữ liệu, chạy code lập trình đa luồng mượt mà, không lo thắt nút cổ chai hệ thống.",
-      Images: ["dell-inspiron-14-5430.jpg"], Average_rating: 4.4, Total_reviews: 62, Status: "on_sale", Discount: 12, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["dell-inspiron-14-5430.jpg"], Average_rating: 4.4, Total_reviews: 62, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { CPU: "Intel Core i5-1335U", GPU: "Intel Iris Xe Graphics", RAM: "16GB DDR4", Storage: "512GB SSD PCIe", Screen_Size: "14 inch", Battery: "54Wh", Weight: "1.55 kg", Refresh_Rate: "60Hz", Resolution: "1920x1200 FHD+", OS: "Windows 11 Home", Usage_Type: "Lập trình, Phân tích số liệu, Học tập", User_Segment: "Sinh viên Hệ thống thông tin, BA", Performance_Level: "Trung bình - Cao", Portability: "Cao", Gaming_Support: "Không", AI_Tag: "dell-inspiron, ram-16gb, lập-trình, tỷ-lệ-16-10" }
     },
     variants: [{ Product_variant_id: "VAR_086", Variant_name: "16GB / 512GB - Silver", Attributes: { Color: "Silver", RAM: "16GB", Storage: "512GB" }, Price: 17990000, Stock_quantity: 20 }]
@@ -187,7 +187,7 @@ const productsData = [
     product: {
       Product_id: "PRD_010", Category_id: "CAT_002", Brand_id: "BRD_001", Product_name: "Apple iPhone 16",
       Description: "Chiếc iPhone thế hệ mới sở hữu ngôn ngữ thiết kế camera dọc độc đáo hỗ trợ quay video không gian Spatial Video. Tích hợp phím Camera Control cảm ứng lực thông minh và dòng vi xử lý chip A18 băng thông cao, sẵn sàng phục vụ toàn bộ các tính năng trợ lý ảo thông minh.",
-      Images: ["iphone-16-black.jpg", "iphone-16-teal.jpg"], Average_rating: 4.7, Total_reviews: 241, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
+      Images: ["iphone-16-black.jpg", "iphone-16-teal.jpg"], Average_rating: 4.7, Total_reviews: 241, Status: "on_sale", Discount: 12, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Chipset: "Apple A18 6-core", RAM: "8GB", ROM: "128GB", Camera: "48MP + 12MP (Sau), 12MP (Trước)", Battery: "3561 mAh", Screen_Type: "Super Retina XDR OLED", Refresh_Rate: "60Hz", Display_Size: "6.1 inch", OS: "iOS 18", Usage_Type: "Mạng xã hội, Chụp hình, Giải trí hằng ngày", User_Segment: "Giới trẻ, Sinh viên, Người dùng Apple", Performance_Level: "Cao", Portability: "Rất cao", Gaming_Support: "Có", AI_Tag: "iphone-16, apple-intelligence, camera-control, gọn-nhẹ" }
     },
     variants: [{ Product_variant_id: "VAR_029", Variant_name: "128GB - Black", Attributes: { Color: "Black", Storage: "128GB" }, Price: 22990000, Stock_quantity: 45 }]
@@ -205,7 +205,7 @@ const productsData = [
     product: {
       Product_id: "PRD_012", Category_id: "CAT_002", Brand_id: "BRD_007", Product_name: "Samsung Galaxy A55 5G",
       Description: "Dòng sản phẩm smartphone tầm trung xuất sắc sở hữu khung viền kim loại cứng cáp tinh xảo và mặt lưng kính bóng bẩy. Máy được trang bị hệ thống tản nhiệt buồng hơi lớn giúp tối ưu hiệu năng chơi game ổn định trên nền mạng di động 5G tốc độ cao.",
-      Images: ["samsung-a55-awesome-navy.jpg"], Average_rating: 4.4, Total_reviews: 276, Status: "on_sale", Discount: 20, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["samsung-a55-awesome-navy.jpg"], Average_rating: 4.4, Total_reviews: 276, Status: "on_sale", Discount: 35, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { Chipset: "Exynos 1480 8-core", RAM: "8GB", ROM: "128GB", Camera: "50MP + 12MP + 5MP (Sau), 32MP (Trước)", Battery: "5000 mAh", Screen_Type: "Super AMOLED", Refresh_Rate: "120Hz", Display_Size: "6.6 inch", OS: "Android 14, One UI 6.1", Usage_Type: "Giải trí, Chụp ảnh du lịch, Xem phim", User_Segment: "Sinh viên, Người dùng phổ thông", Performance_Level: "Trung bình - Cao", Portability: "Rất cao", Gaming_Support: "Có", AI_Tag: "samsung-a55, pin-trâu, màn-120hz, giá-tầm-trung" }
     },
     variants: [{ Product_variant_id: "VAR_038", Variant_name: "8GB / 128GB - Awesome Navy", Attributes: { Color: "Awesome Navy", RAM: "8GB", Storage: "128GB" }, Price: 9990000, Stock_quantity: 50 }]
@@ -214,7 +214,7 @@ const productsData = [
     product: {
       Product_id: "PRD_013", Category_id: "CAT_002", Brand_id: "BRD_008", Product_name: "Xiaomi 14T Pro",
       Description: "Flagship killer chuyên trị nhiếp ảnh đường phố nhờ sự hợp tác thấu kính độc quyền cùng hãng camera Leica danh tiếng. Sở hữu tấm nền màn hình tần số quét khủng 144Hz siêu mượt và công nghệ sạc pin HyperCharge thần tốc công suất lên tới 120W.",
-      Images: ["xiaomi-14t-pro-black-titanium.jpg"], Average_rating: 4.6, Total_reviews: 143, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
+      Images: ["xiaomi-14t-pro-black-titanium.jpg"], Average_rating: 4.6, Total_reviews: 143, Status: "on_sale", Discount: 15, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Chipset: "MediaTek Dimensity 9300+ 8-core", RAM: "12GB", ROM: "256GB", Camera: "50MP (Leica) + 50MP + 12MP (Sau), 32MP (Trước)", Battery: "5000 mAh (Sạc 120W)", Screen_Type: "AMOLED 1.5K", Refresh_Rate: "144Hz", Display_Size: "6.67 inch", OS: "Android 14, HyperOS", Usage_Type: "Nhiếp ảnh Leica, Chiến game cấu hình cao, Sạc nhanh", User_Segment: "Tín đồ công nghệ, Gen Z cá tính", Performance_Level: "Rất cao", Portability: "Rất cao", Gaming_Support: "Có", AI_Tag: "xiaomi, ống-kính-leica, sạc-120w, màn-144hz" }
     },
     variants: [{ Product_variant_id: "VAR_041", Variant_name: "12GB / 256GB - Black Titanium", Attributes: { Color: "Black Titanium", RAM: "12GB", Storage: "256GB" }, Price: 15990000, Stock_quantity: 30 }]
@@ -223,7 +223,7 @@ const productsData = [
     product: {
       Product_id: "PRD_014", Category_id: "CAT_002", Brand_id: "BRD_009", Product_name: "OPPO Reno 12 Pro 5G",
       Description: "Được mệnh danh là chuyên gia chụp ảnh chân dung thế hệ mới tích hợp sâu các thuật toán AI thông minh độc quyền giúp tự động xóa vật thể thừa, chỉnh sửa ảnh nhắm mắt khi chụp tập thể và tối ưu hóa bắt sóng di động thông minh.",
-      Images: ["oppo-reno12-pro-sunset-gold.jpg"], Average_rating: 4.3, Total_reviews: 97, Status: "on_sale", Discount: 15, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["oppo-reno12-pro-sunset-gold.jpg"], Average_rating: 4.3, Total_reviews: 97, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Chipset: "MediaTek Dimensity 7300 Energy", RAM: "12GB", ROM: "256GB", Camera: "50MP + 50MP + 8MP (Sau), 50MP AI (Trước)", Battery: "5000 mAh (Sạc 80W)", Screen_Type: "AMOLED cong 3D", Refresh_Rate: "120Hz", Display_Size: "6.7 inch", OS: "Android 14, ColorOS 14", Usage_Type: "Chụp ảnh chân dung, Selfie nét cao, Thiết kế mỏng nhẹ", User_Segment: "Gen Z yêu chụp ảnh, Phái đẹp", Performance_Level: "Trung bình - Cao", Portability: "Rất cao", Gaming_Support: "Có", AI_Tag: "oppo-reno, chuyên-gia-chân-dung, ai-retouch, thiết-kế-đẹp" }
     },
     variants: [{ Product_variant_id: "VAR_044", Variant_name: "12GB / 256GB - Sunset Gold", Attributes: { Color: "Sunset Gold", RAM: "12GB", Storage: "256GB" }, Price: 13490000, Stock_quantity: 25 }]
@@ -241,7 +241,7 @@ const productsData = [
     product: {
       Product_id: "PRD_037", Category_id: "CAT_002", Brand_id: "BRD_001", Product_name: "Apple iPhone 15 128GB",
       Description: "Sự lựa chọn kinh tế tối ưu trong hệ sinh thái Apple sở hữu tính năng Dynamic Island biến đổi thông minh, cổng sạc kết nối chuẩn USB-C hiện đại tiện lợi và cụm ống kính camera chính nâng cấp vượt bậc lên độ phân giải 48MP.",
-      Images: ["iphone-15-black.jpg"], Average_rating: 4.6, Total_reviews: 189, Status: "on_sale", Discount: 25, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["iphone-15-black.jpg"], Average_rating: 4.6, Total_reviews: 189, Status: "on_sale", Discount: 30, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { Chipset: "Apple A16 Bionic 6-core", RAM: "6GB", ROM: "128GB", Camera: "48MP + 12MP (Sau), 12MP TrueDepth (Trước)", Battery: "3349 mAh", Screen_Type: "Super Retina XDR OLED", Refresh_Rate: "60Hz", Display_Size: "6.1 inch", OS: "iOS 17 (Lên được iOS 18)", Usage_Type: "Sử dụng hằng ngày, Quay vlog, Gọn nhẹ tối giản", User_Segment: "Người dùng tìm kiếm iPhone giá tốt", Performance_Level: "Cao", Portability: "Rất cao", Gaming_Support: "Có", AI_Tag: "iphone-15, dynamic-island, cổng-typec, giá-hợp-lý" }
     },
     variants: [{ Product_variant_id: "VAR_089", Variant_name: "128GB - Black", Attributes: { Color: "Black", RAM: "6GB", Storage: "128GB" }, Price: 19990000, Stock_quantity: 22 }]
@@ -281,7 +281,7 @@ const productsData = [
     product: {
       Product_id: "PRD_016", Category_id: "CAT_003", Brand_id: "BRD_001", Product_name: "Apple iPad Air M2 11 inch",
       Description: "Sự cân bằng hoàn mĩ giữa giá thành đầu tư và hiệu năng xử lý phần cứng nhờ trang bị con chip M2 mạnh mẽ, tương thích hoàn toàn chiếc bút cảm ứng thông minh Apple Pencil Pro phục vụ hoàn hảo các nhu cầu học tập, vẽ phác thảo ghi chú bài giảng.",
-      Images: ["ipad-air-m2-11-starlight.jpg"], Average_rating: 4.7, Total_reviews: 112, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
+      Images: ["ipad-air-m2-11-starlight.jpg"], Average_rating: 4.7, Total_reviews: 112, Status: "on_sale", Discount: 12, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Chipset: "Apple M2 8-core", RAM: "8GB Architecture", ROM: "128GB", Camera: "12MP (Sau), 12MP Siêu rộng đặt cạnh ngang (Trước)", Battery: "28.93Wh (~10 giờ)", Screen_Type: "Liquid Retina IPS LCD", Refresh_Rate: "60Hz", Display_Size: "11.0 inch", OS: "iPadOS 17", Usage_Type: "Ghi chú học tập, Vẽ phác thảo, Xem bài giảng đa nhiệm", User_Segment: "Sinh viên đại học, Nhân viên văn phòng năng động", Performance_Level: "Cao", Gaming_Support: "Có", AI_Tag: "ipad-air, chip-m2, học-tập, ghi-chú, vẽ-vời" }
     },
     variants: [{ Product_variant_id: "VAR_050", Variant_name: "128GB Wi-Fi - Starlight", Attributes: { Color: "Starlight", Storage: "128GB", Connectivity: "Wi-Fi" }, Price: 18990000, Stock_quantity: 25 }]
@@ -290,7 +290,7 @@ const productsData = [
     product: {
       Product_id: "PRD_017", Category_id: "CAT_003", Brand_id: "BRD_007", Product_name: "Samsung Galaxy Tab S10+ 5G",
       Description: "Chiếc máy tính bảng Android cao cấp mở rộng tối đa năng suất làm việc nhờ chiếc bút S-Pen quyền năng tặng kèm sẵn trong hộp, khả năng kháng nước bụi bền bỉ chuẩn IP68 và chế độ giao diện Samsung DeX biến hình linh hoạt như máy tính.",
-      Images: ["galaxy-tab-s10plus-moonstone-gray.jpg"], Average_rating: 4.6, Total_reviews: 54, Status: "on_sale", Discount: 10, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["galaxy-tab-s10plus-moonstone-gray.jpg"], Average_rating: 4.6, Total_reviews: 54, Status: "on_sale", Discount: 32, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { Chipset: "Snapdragon 8 Gen 3 for Galaxy", RAM: "12GB", ROM: "256GB", Camera: "13MP + 8MP (Sau), 12MP Siêu rộng (Trước)", Battery: "10090 mAh", Screen_Type: "Dynamic AMOLED 2X", Refresh_Rate: "120Hz", Display_Size: "12.4 inch", OS: "Android 14, One UI 6.1", Usage_Type: "Đa nhiệm văn phòng DeX, Vẽ thiết kế Android, Kháng nước di động", User_Segment: "Kỹ sư công trường, Thiết kế đồ họa Android, BA", Performance_Level: "Rất cao", Gaming_Support: "Có", AI_Tag: "samsung-tab, bút-s-pen, amoled-120hz, kháng-nước-ip68" }
     },
     variants: [{ Product_variant_id: "VAR_054", Variant_name: "12GB / 256GB 5G - Moonstone Gray", Attributes: { Color: "Moonstone Gray", RAM: "12GB", Storage: "256GB", Connectivity: "5G" }, Price: 22990000, Stock_quantity: 12 }]
@@ -308,7 +308,7 @@ const productsData = [
     product: {
       Product_id: "PRD_040", Category_id: "CAT_003", Brand_id: "BRD_001", Product_name: "Apple iPad Gen 10 10.9 inch",
       Description: "Chiếc máy tính bảng quốc dân thế hệ mới sở hữu thiết kế vuông vức thời thượng loại bỏ nút Home vật lý, thay thế bằng cổng kết nối Type-C đồng bộ xu hướng hiện đại và dải loa kép lập thể phục vụ hoàn hảo nhu cầu học tập online.",
-      Images: ["ipad-gen10-blue.jpg"], Average_rating: 4.5, Total_reviews: 145, Status: "on_sale", Discount: 15, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["ipad-gen10-blue.jpg"], Average_rating: 4.5, Total_reviews: 145, Status: "on_sale", Discount: 30, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { Chipset: "Apple A14 Bionic 6-core", RAM: "4GB", ROM: "64GB", Camera: "12MP (Sau), 12MP Siêu rộng góc ngang (Trước)", Battery: "28.6Wh (~10 giờ)", Screen_Type: "Liquid Retina IPS LCD", Refresh_Rate: "60Hz", Display_Size: "10.9 inch", OS: "iPadOS 16 (Lên được iPadOS 18)", Usage_Type: "Học trực tuyến, Xem phim giải trí, Đọc tài liệu PDF", User_Segment: "Học sinh, Sinh viên đại trà, Phụ huynh đọc báo", Performance_Level: "Trung bình - Khá", Gaming_Support: "Có", AI_Tag: "ipad-gen-10, cổng-typec, thiết-kế-mới, học-online" }
     },
     variants: [{ Product_variant_id: "VAR_092", Variant_name: "64GB Wi-Fi - Pastel Blue", Attributes: { Color: "Pastel Blue", Storage: "64GB", Connectivity: "Wi-Fi" }, Price: 9990000, Stock_quantity: 40 }]
@@ -326,7 +326,7 @@ const productsData = [
     product: {
       Product_id: "PRD_042", Category_id: "CAT_003", Brand_id: "BRD_008", Product_name: "Xiaomi Pad 6",
       Description: "Thiết kế nhôm nguyên khối siêu mỏng mang lại diện mạo vô cùng sang trọng, màn hình cao cấp độ phân giải 2.8K siêu mịn tích hợp chip xử lý Snapdragon 870 huyền thoại cực kỳ mát máy và ổn định khi cày game MOBA liên tục nhiều giờ.",
-      Images: ["xiaomi-pad6-gold.jpg"], Average_rating: 4.5, Total_reviews: 120, Status: "on_sale", Discount: 18, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["xiaomi-pad6-gold.jpg"], Average_rating: 4.5, Total_reviews: 120, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Chipset: "Snapdragon 870 8-core", RAM: "8GB", ROM: "128GB", Camera: "13MP (Sau), 8MP (Trước)", Battery: "8840 mAh (Sạc 33W)", Screen_Type: "IPS LCD 2.8K sắc nét", Refresh_Rate: "144Hz", Display_Size: "11.0 inch", OS: "Android 13, MIUI Pad 14", Usage_Type: "Chơi game cày cuốc, Làm việc văn phòng di động, Xem phim nét", User_Segment: "Game thủ Android, Dân công nghệ ưa thông số", Performance_Level: "Cao", Gaming_Support: "Có", AI_Tag: "xiaomi-pad-6, chip-snap-870, màn-2.8k, vỏ-nhôm" }
     },
     variants: [{ Product_variant_id: "VAR_094", Variant_name: "8GB / 128GB Wi-Fi - Luxury Gold", Attributes: { Color: "Luxury Gold", RAM: "8GB", Storage: "128GB", Connectivity: "Wi-Fi" }, Price: 7990000, Stock_quantity: 20 }]
@@ -366,7 +366,7 @@ const productsData = [
     product: {
       Product_id: "PRD_019", Category_id: "CAT_004", Brand_id: "BRD_012", Product_name: "Sony WH-1000XM5",
       Description: "Tai nghe chụp tai Bluetooth sở hữu công nghệ cấu trúc chống ồn chủ động thông minh hàng đầu thế giới cản sạch mọi tạp âm cuộc sống, tích hợp âm thanh độ phân giải cao Hi-Res Audio mang lại trải nghiệm âm nhạc tinh khiết.",
-      Images: ["sony-wh1000xm5-black.jpg"], Average_rating: 4.8, Total_reviews: 187, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
+      Images: ["sony-wh1000xm5-black.jpg"], Average_rating: 4.8, Total_reviews: 187, Status: "on_sale", Discount: 15, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Tai nghe chụp tai Over-ear", Driver: "30mm Neodymium tinh chỉnh", Frequency: "4Hz - 40000Hz", ANC: "Chống ồn chủ động Adaptive ANC thông minh", Battery: "30 giờ bật ANC (Sạc nhanh 3 phút dùng 3 giờ)", Connectivity: "Bluetooth 5.2, Jack 3.5mm đa điểm", Microphone: "8 Micro tích hợp thuật toán AI lọc gió", Weight: "250g", Usage_Type: "Nghe nhạc Hi-Fi, Cách âm làm việc văn phòng, Đi máy bay", User_Segment: "Audiophile, Người làm việc tập trung, Doanh nhân", Performance_Level: "Premium Cao cấp", AI_Tag: "tai-nghe-sony, chống-ồn-đỉnh-cao, hi-res-audio, pin-30-giờ" }
     },
     variants: [{ Product_variant_id: "VAR_060", Variant_name: "Midnight Black", Attributes: { Color: "Midnight Black" }, Price: 8490000, Stock_quantity: 35 }]
@@ -402,7 +402,7 @@ const productsData = [
     product: {
       Product_id: "PRD_023", Category_id: "CAT_004", Brand_id: "BRD_013", Product_name: "Logitech Blue Yeti USB Microphone",
       Description: "Microphone kết nối USB tiêu chuẩn công nghiệp dành riêng cho giới Streamer, Podcaster chuyên nghiệp. Hệ thống 3 viên nang tụ điện độc quyền hỗ trợ linh hoạt 4 chế độ thu âm khác nhau mang lại dải giọng nói rõ nét hoàn hảo.",
-      Images: ["logitech-blue-yeti-blackout.jpg"], Average_rating: 4.5, Total_reviews: 76, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
+      Images: ["logitech-blue-yeti-blackout.jpg"], Average_rating: 4.5, Total_reviews: 76, Status: "on_sale", Discount: 10, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Microphone thu âm USB ngưng tụ (Condenser)", Driver: "3 viên nang tụ điện 14mm độc quyền Blue", Frequency: "20Hz - 20000Hz", SampleRate: "48kHz / 16-bit độ nét cao", Connectivity: "Dây cáp kết nối USB, cổng tai nghe 3.5mm monitor không trễ", Pattern: "4 chế độ: Cardioid (Đơn hướng), Omnidirectional (Đa hướng), Figure-8 (Hai chiều), Stereo", Weight: "1200g tính cả đế đứng", Usage_Type: "Thu âm Podcast, Livestream game, Ghi âm giọng đọc ASMR", User_Segment: "Streamer, Podcaster, Nhà sáng tạo nội dung", Performance_Level: "Tiêu chuẩn studio", AI_Tag: "micro-thu-âm, logitech-yeti, cắm-là-chạy, podcast-stream" }
     },
     variants: [{ Product_variant_id: "VAR_068", Variant_name: "Blackout Edition", Attributes: { Color: "Blackout" }, Price: 3290000, Stock_quantity: 20 }]
@@ -420,7 +420,7 @@ const productsData = [
     product: {
       Product_id: "PRD_047", Category_id: "CAT_004", Brand_id: "BRD_011", Product_name: "JBL Live Pro 2 True Wireless",
       Description: "Tai nghe nhét tai không dây hình cuống thời trang ôm khít ống tai êm ái. Tích hợp công nghệ chống ồn tự thích ứng môi trường True Adaptive ANC và cấu trúc 6 micro thu âm chùm tia giúp mọi cuộc gọi hội thoại công việc sắc nét hoàn hảo.",
-      Images: ["jbl-live-pro2-silver.jpg"], Average_rating: 4.5, Total_reviews: 74, Status: "on_sale", Discount: 25, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["jbl-live-pro2-silver.jpg"], Average_rating: 4.5, Total_reviews: 74, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Tai nghe nhét tai True Wireless in-ear", Driver: "11mm Driver động chất âm mãnh liệt", Frequency: "20Hz - 20000Hz", ANC: "True Adaptive ANC tự thích ứng môi trường thông minh", Battery: "10 giờ tai nghe + 30 giờ hộp sạc tổng cộng 40h", Connectivity: "Bluetooth 5.2 kết nối đa điểm chuyển đổi thiết bị nhanh", Microphone: "6 Micro chùm tia lọc tạp âm đàm thoại sắc nét", Weight: "4.8g mỗi bên tai", Usage_Type: "Họp hành trực tuyến, Nghe nhạc tập gym năng động, Gọi điện thoại", User_Segment: "Nhân viên văn phòng, Người họp hành nhiều, Sinh viên", Performance_Level: "Tầm trung cao cấp", AI_Tag: "jbl-live, chống-ồn-tự-động, đàm-thoại-6-mic, pin-40-giờ" }
     },
     variants: [{ Product_variant_id: "VAR_099", Variant_name: "Liquid Silver", Attributes: { Color: "Liquid Silver" }, Price: 2990000, Stock_quantity: 30 }]
@@ -438,7 +438,7 @@ const productsData = [
     product: {
       Product_id: "PRD_049", Category_id: "CAT_004", Brand_id: "BRD_012", Product_name: "Sony SRS-XE200 Wireless Speaker",
       Description: "Loa di động không dây sở hữu bộ khuếch tán hình tuyến tính Line-Shape Diffuser độc đáo giúp phân tán dải âm thanh trải rộng, đều khắp mọi góc không gian tiệc tùng mà không làm méo hay giảm suy suy giảm chất lượng nhạc.",
-      Images: ["sony-srs-xe200-orange.jpg"], Average_rating: 4.3, Total_reviews: 49, Status: "on_sale", Discount: 15, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["sony-srs-xe200-orange.jpg"], Average_rating: 4.3, Total_reviews: 49, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Loa di động không dây Bluetooth cầm tay", Driver: "Màng loa X-Balanced độc quyền tăng áp suất âm thanh", Frequency: "20Hz - 20000Hz", ANC: "Không có", Battery: "16 giờ nghe nhạc liên tục (Có sạc nhanh 10 phút dùng 70 phút)", Connectivity: "Bluetooth 5.2 hỗ trợ tính năng kết nối nhiều loa Party Connect", WaterResistance: "Kháng nước bụi tuyệt hảo IP67 + Kháng chấn động va đập", Microphone: "Micro tích hợp công nghệ khử tiếng vọng Echo Cancelling", Weight: "800g có dây treo tiện lợi", Usage_Type: "Mang đi dã ngoại, Đạp xe ngoài trời nghe nhạc, Tiệc nhỏ trong phòng", User_Segment: "Giới trẻ thích xê dịch, Phượt thủ, Sinh viên tụ tập dã ngoại", Performance_Level: "Tầm trung bền bỉ", AI_Tag: "loa-sony, khuếch-tán-âm, chống-nước-ip67, chống-va-đập" }
     },
     variants: [{ Product_variant_id: "VAR_101", Variant_name: "Energy Orange", Attributes: { Color: "Energy Orange" }, Price: 2450000, Stock_quantity: 15 }]
@@ -496,7 +496,7 @@ const productsData = [
     product: {
       Product_id: "PRD_051", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Anker Nano Power Bank 30W",
       Description: "Pin sạc dự phòng mini nhỏ gọn kích thước hình thỏi son tích hợp sẵn đầu dây sạc cáp chuẩn Type-C dính liền thân máy vô cùng tiện nghi, công suất xả 30W sạc nhanh cấp tốc cho các thiết bị smartphone thế hệ mới.",
-      Images: ["anker-nano-powerbank-mint.jpg"], Average_rating: 4.6, Total_reviews: 82, Status: "on_sale", Discount: 15, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["anker-nano-powerbank-mint.jpg"], Average_rating: 4.6, Total_reviews: 82, Status: "on_sale", Discount: 15, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Pin sạc dự phòng mini cầm tay", Capacity: "10000 mAh dung lượng thực tế", MaxOutput: "30W Sạc nhanh Power Delivery", Ports: "Tích hợp sẵn 1 dây cáp gắn liền Type-C + 1 cổng USB-C in/out", Security: "Hệ thống kiểm soát nhiệt độ an toàn thông minh", Size: "Kích thước bỏ túi quần nhỏ gọn", Weight: "215g siêu nhẹ", Usage_Type: "Sạc nhanh điện thoại dự phòng khi đi học, đi chơi chụp hình nhiều", User_Segment: "Gen Z năng động, Nữ giới chuộng thiết kế nhỏ xinh, Sinh viên", Performance_Level: "Phổ thông tiện ích", AI_Tag: "sạc-dự-phòng-mini, anker-nano, dây-sạc-liền-thân, sạc-nhanh-30w" }
     },
     variants: [{ Product_variant_id: "VAR_103", Variant_name: "Mint Green Edition", Attributes: { Color: "Mint Green" }, Price: 790000, Stock_quantity: 50 }]
@@ -523,7 +523,7 @@ const productsData = [
     product: {
       Product_id: "PRD_054", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Anker Prime 100W GaN Wall Charger",
       Description: "Củ sạc nhanh công nghệ vật liệu bán dẫn GaN thế hệ mới thu nhỏ kích thước củ sạc xuống siêu gọn gàng bằng hộp tai nghe nhưng mang trong mình tổng công suất xả dòng điện sạc khổng lồ lên tới 100W an toàn.",
-      Images: ["anker-prime-100w-gan.jpg"], Average_rating: 4.8, Total_reviews: 93, Status: "on_sale", Discount: 10, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["anker-prime-100w-gan.jpg"], Average_rating: 4.8, Total_reviews: 93, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Củ sạc nhanh công nghệ bán dẫn GaNPrime", TotalPower: "100W Đầu ra thông minh phân bổ dòng", Ports: "2 cổng USB-C sạc nhanh máy tính, 1 cổng USB-A đa năng sạc pin phụ kiện", Security: "Hệ thống kiểm soát cảm biến nhiệt độ an toàn ActiveShield 2.0", Plug: "Chân cắm dẹt có thể gập gọn gàng chống gãy xước", Weight: "180g siêu nhỏ", Usage_Type: "Củ sạc đơn thay thế toàn bộ cục sạc cồng kềnh trong balo khi đi học", User_Segment: "Học sinh, Sinh viên công nghệ, Lập trình viên di động nhiều", Performance_Level: "Phụ kiện thiết yếu cao cấp", AI_Tag: "củ-sạc-nhanh, anker-prime, công-nghệ-gan-100w, sạc-laptop-điện-thoại" }
     },
     variants: [{ Product_variant_id: "VAR_106", Variant_name: "Anker Prime Black", Attributes: { Color: "Black", Power: "100W" }, Price: 1450000, Stock_quantity: 40 }]
@@ -554,7 +554,7 @@ const productsData = [
     product: {
       Product_id: "PRD_028", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Razer DeathAdder V3 HyperSpeed",
       Description: "Dòng chuột gaming không dây huyền thoại được tái sinh với trọng lượng siêu nhẹ chỉ 88g không đục lỗ vỏ thân máy. Cảm biến Focus X 26.000 DPI siêu chuẩn xác tuyệt đối kết hợp công nghệ không dây HyperSpeed không độ trễ tín hiệu.",
-      Images: ["razer-deathadder-v3-black.jpg"], Average_rating: 4.7, Total_reviews: 93, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
+      Images: ["razer-deathadder-v3-black.jpg"], Average_rating: 4.7, Total_reviews: 93, Status: "on_sale", Discount: 15, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Sensor: "Mắt đọc quang học Razer Focus X 26K DPI siêu chuẩn", Switch: "Razer Optical Mouse Switches Gen-3 bền bỉ 100 triệu click chống double click", Battery: "90 giờ chơi liên tục chế độ HyperSpeed không dây", Connectivity: "Không dây không độ trễ Razer HyperSpeed Wireless 2.4GHz + Cáp rời", Buttons: "6 nút gán macro lập trình lệnh qua phần mềm Synapse", Weight: "88g Siêu nhẹ không lỗ vỏ", Usage_Type: "Chiến game FPS competitive chuyên sâu (Valorant, CS2), Esports", User_Segment: "Gamer bắn súng FPS chuyên nghiệp, Vận động viên Esports", Performance_Level: "Đỉnh cao chuột Gaming", AI_Tag: "chuột-gaming-razer, deathadder-v3, chuột-fps-siêu-nhẹ, không-dây-hyperspeed" }
     },
     variants: [{ Product_variant_id: "VAR_077", Variant_name: "Razer Black Edition", Attributes: { Color: "Black" }, Price: 1890000, Stock_quantity: 35 }]
@@ -563,7 +563,7 @@ const productsData = [
     product: {
       Product_id: "PRD_029", Category_id: "CAT_006", Brand_id: "BRD_014", Product_name: "HyperX Alloy Origins 65 Mechanical Keyboard",
       Description: "Bàn phím cơ chơi game layout 65% nhỏ gọn tối giản giữ lại cụm phím điều hướng mũi tên thiết yếu. Khung vỏ chế tác nhôm nguyên khối đầm chắc chắn chống dịch chuyển phím cùng hệ thống dải đèn LED RGB rực rỡ per-key sắc nét.",
-      Images: ["hyperx-alloy-origins-65.jpg"], Average_rating: 4.6, Total_reviews: 67, Status: "on_sale", Discount: 15, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["hyperx-alloy-origins-65.jpg"], Average_rating: 4.6, Total_reviews: 67, Status: "on_sale", Discount: 35, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { Layout: "65% Gọn gàng (68 phím giữ cụm mũi tên điều hướng)", Switch: "Switch cơ học độc quyền HyperX Aqua gõ đanh nịnh tai phản hồi tốt", Backlight: "Đèn LED RGB chiếu sáng per-key rực rỡ với phần mềm NGENUITY", Body: "Vỏ nhôm nguyên khối chuẩn hàng không chịu lực đập gõ mạnh", Keycap: "Nhựa PBT double-shot siêu bền bỉ chống bóng mờ phím chữ", Connectivity: "Dây cáp kết nối rời chuẩn USB Type-C bọc vải dù chống đứt", Weight: "825g đầm chắc", Usage_Type: "Gõ phím chiến game buổi đêm, setup góc chơi game tối giản, gõ văn bản văn phòng", User_Segment: "Game thủ chuộng layout gọn, Lập trình viên thích phím cơ compact", Performance_Level: "Cao cấp cơ học", AI_Tag: "bàn-phím-cơ-hyperx, layout-65, switch-aqua-linear, nhôm-nguyên-khối" }
     },
     variants: [{ Product_variant_id: "VAR_078", Variant_name: "Black - Aqua Switch", Attributes: { Color: "Black", Switch: "HyperX Aqua" }, Price: 2290000, Stock_quantity: 25 }]
@@ -608,7 +608,7 @@ const productsData = [
     product: {
       Product_id: "PRD_057", Category_id: "CAT_006", Brand_id: "BRD_002", Product_name: "Tai nghe nhét tai ASUS ROG Cetra True Wireless",
       Description: "Dòng tai nghe nhét tai gaming không dây TWS hiếm hoi trên thị trường tối ưu riêng cho game thủ với chế độ Gaming Mode giảm độ trễ tín hiệu âm học xuống cực thấp, tích hợp chống ồn chủ động ANC cản sạch tạp âm khi chơi game cafe.",
-      Images: ["asus-rog-cetra-tws.jpg"], Average_rating: 4.4, Total_reviews: 43, Status: "on_sale", Discount: 12, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["asus-rog-cetra-tws.jpg"], Average_rating: 4.4, Total_reviews: 43, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Tai nghe nhét tai Gaming True Wireless in-ear", Driver: "10mm Driver ASUS Essence độc quyền tinh chỉnh", Frequency: "20Hz - 20000Hz", ANC: "Chống ồn chủ động ANC ngăn tạp âm môi trường quán cafe", Battery: "4.8 giờ tai nghe + 21.8 giờ hộp sạc (Có sạc không dây tiện lợi)", Latency: "Chế độ Gaming mode kích hoạt giảm độ trễ âm thanh xuống cực thấp", WaterResistance: "Kháng nước nhẹ chuẩn IPX4 an toàn mồ hôi khi đeo", Weight: "5.2g mỗi bên tai", Usage_Type: "Chơi game PUBG Mobile không trễ tiếng súng, Nghe nhạc EDM bass tốt di động", User_Segment: "Gamer Mobile, Người thích tai nghe nhỏ gọn đậm chất ROG", Performance_Level: "Gaming TWS chuyên dụng", AI_Tag: "tai-nghe-gaming-rog, cetra-tws, độ-trễ-thấp, chống-ồn-anc" }
     },
     variants: [{ Product_variant_id: "VAR_109", Variant_name: "ROG Cetra Black", Attributes: { Color: "Black" }, Price: 1850000, Stock_quantity: 30 }]
@@ -626,7 +626,7 @@ const productsData = [
     product: {
       Product_id: "PRD_059", Category_id: "CAT_006", Brand_id: "BRD_013", Product_name: "Logitech G502 X Plus Wireless Gaming Mouse",
       Description: "Sự tái sinh hoàn hảo của dòng chuột chơi game bán chạy nhất thế giới. Form dáng công thái học cầm đầy đặn tay, nâng cấp hệ thống switch bấm lai hybrid quang cơ LIGHTFORCE bất tử không lo double click cùng dải LED RGB 8 vùng lộng lẫy.",
-      Images: ["logitech-g502x-plus.jpg"], Average_rating: 4.8, Total_reviews: 104, Status: "on_sale", Discount: 20, Is_Flash_Sale: true, Is_AI: false,
+      Images: ["logitech-g502x-plus.jpg"], Average_rating: 4.8, Total_reviews: 104, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Sensor: "Mắt đọc quang học thế hệ mới HERO 25K bám sát hoàn hảo", DPI: "Dải DPI rộng tùy biến tự do từ 100 đến 25600 DPI siêu nhạy", Switch: "LIGHTFORCE Hybrid Quang-Cơ học phản hồi giòn giã sắc bén, tuổi thọ vô cực", Backlight: "Hệ thống đèn LED LIGHTSYNC RGB 8 vùng phát màu tùy biến động thông minh", Connectivity: "Không dây LIGHTSPEED cải tiến tốc độ phản hồi nhanh hơn 68% bản cũ", Buttons: "13 nút bấm chức năng có thể gán macro qua phần mềm G HUB chuyên sâu", Weight: "106g công thái học đầm tay", Usage_Type: "Chơi game thế giới mở RPG, game MOBA cần nhiều phím tắt gán lệnh macro nhanh", User_Segment: "Gamer MOBA LOL, Người dùng chuộng thiết kế cơ bắp nhiều nút bấm phụ", Performance_Level: "Premium Gaming chuột", AI_Tag: "chuột-gaming-logitech, g502x-plus, switch-hybrid-quang-cơ, không-dây-lightspeed" }
     },
     variants: [{ Product_variant_id: "VAR_111", Variant_name: "Black Lightspeed Wireless", Attributes: { Color: "Black" }, Price: 3590000, Stock_quantity: 18 }]
