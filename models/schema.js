@@ -350,6 +350,8 @@ const MessageSchema = new Schema(
     Message_id: { type: String, required: true, unique: true },
     Session_id: { type: String, required: true, ref: "Session" },
     Content: { type: String, required: true },
+    Products_json: { type: String, default: null },
+    Vouchers_json: { type: String, default: null },
     Created_at: { type: Date, default: Date.now },
     Sender_type: {
       type: String,
