@@ -1,15 +1,34 @@
-const { Session, Message, Product, Product_variant, Category } = require("../models/schema");
+const { Session, Message, Product, Product_variant, Category, Voucher } = require("../models/schema");
 
 // ─────────────────────────────────────────────
 // HELPER: sinh ID tăng dần theo convention dự án
 // ─────────────────────────────────────────────
 async function genSessionId() {
-  const count = await Session.countDocuments();
-  return `SES_${String(count + 1).padStart(3, "0")}`;
+  // Tìm session có Session_id lớn nhất (sắp xếp giảm dần -1)
+  const lastSession = await Session.findOne().sort({ Session_id: -1 }).lean();
+  
+  if (!lastSession || !lastSession.Session_id) {
+    return "SES_001"; // Nếu DB chưa có gì, bắt đầu từ 001
+  }
+
+  // Tách lấy phần số (Ví dụ: "SES_007" -> "007" -> 7)
+  const lastNum = parseInt(lastSession.Session_id.replace("SES_", ""), 10);
+  const nextNum = lastNum + 1;
+
+  return `SES_${String(nextNum).padStart(3, "0")}`;
 }
+
 async function genMessageId() {
-  const count = await Message.countDocuments();
-  return `MSG_${String(count + 1).padStart(3, "0")}`;
+  const lastMessage = await Message.findOne().sort({ Message_id: -1 }).lean();
+  
+  if (!lastMessage || !lastMessage.Message_id) {
+    return "MSG_001";
+  }
+
+  const lastNum = parseInt(lastMessage.Message_id.replace("MSG_", ""), 10);
+  const nextNum = lastNum + 1;
+
+  return `MSG_${String(nextNum).padStart(3, "0")}`;
 }
 
 // ─────────────────────────────────────────────
@@ -169,9 +188,38 @@ Quy tắc suggestions: sinh ra 4 gợi ý ngắn (dưới 40 ký tự) phù hợ
     const aiResult = JSON.parse(raw);
     console.log("Chatbot AI result:", JSON.stringify(aiResult, null, 2));
 
-    // ── Tìm sản phẩm từ DB nếu AI xác định cần ─
+    // ── Tìm sản phẩm/voucher từ DB nếu cần ─
     let products = [];
-    if (aiResult.hasProducts === true) {
+    let voucherResults = [];
+
+    const voucherKeywords = ['mã giảm giá', 'mã khuyến mãi', 'voucher', 'mã giam gia', 'chương trình ưu đãi', 'chuong trinh uu dai', 'coupon'];
+    const isVoucherIntent = voucherKeywords.some(kw => content.toLowerCase().includes(kw));
+
+    const flashKeywords = ['flash sale', 'sale hôm nay', 'đang giảm', 'hàng sale', 'sản phẩm giảm giá', 'sản phẩm đang sale'];
+    const isFlashIntent = !isVoucherIntent && flashKeywords.some(kw => content.toLowerCase().includes(kw));
+
+    let overrideReply = null;
+
+    if (isVoucherIntent) {
+      voucherResults = await Voucher.find({ status: { $ne: 'used' } }).limit(5).lean();
+
+      if (voucherResults.length > 0) {
+        const list = voucherResults.map(v => `${v.code} (${v.title})`).join(", ");
+        overrideReply = `Hiện VISTA có ${voucherResults.length} mã giảm giá: ${list}. Xem chi tiết bên dưới nhé!`;
+      } else {
+        overrideReply = "Hiện tại VISTA chưa có mã giảm giá nào khả dụng, bạn quay lại sau nhé!";
+      }
+
+    } else if (isFlashIntent) {
+      let flashProducts = await Product.find({ Status: 'on_sale', Is_Flash_Sale: true }).lean();
+      flashProducts = await Promise.all(flashProducts.map(async (p) => {
+        const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: 'active' }).sort({ Price: 1 }).lean();
+        return { ...p, min_price: variant?.Price || 0 };
+      }));
+      products = flashProducts.slice(0, 4).map((p) => ({ ...p, aiTag: "⚡ Flash Sale" }));
+      overrideReply = `VISTA đang có ${flashProducts.length} sản phẩm Flash Sale hôm nay, giảm giá cực sốc!`;
+
+    } else if (aiResult.hasProducts === true) {
       const filter = { Status: "on_sale" };
 
       if (aiResult.category && aiResult.category !== "null") {
@@ -182,41 +230,36 @@ Quy tắc suggestions: sinh ra 4 gợi ý ngắn (dưới 40 ký tự) phù hợ
       }
 
       let found = await Product.find(filter).lean();
-
-      // Gán giá cho từng sản phẩm
       found = await Promise.all(
         found.map(async (p) => {
           const variant = await Product_variant.findOne({
-            Product_id: p.Product_id,
-            Status: "active",
-          })
-            .sort({ Price: 1 })
-            .lean();
+            Product_id: p.Product_id, Status: "active",
+          }).sort({ Price: 1 }).lean();
           return { ...p, min_price: variant?.Price || 0 };
         })
       );
 
-      // Lọc giá nếu có
       if (aiResult.maxPrice) {
         found = found.filter((p) => p.min_price <= aiResult.maxPrice);
       }
 
-      // Gán badge AI và giới hạn 4 sản phẩm
-      const badges = ["AI Match", "Phù hợp nhu cầu", "Smart Pick", "Giải pháp thay thế"];
       products = found.slice(0, 4).map((p, i) => ({
         ...p,
-        aiTag: badges[i] || "Gợi ý",
+        aiTag: "AI Đề xuất",
         matchScore: Math.max(96 - i * 4, 75),
       }));
     }
+
+    const finalReply = overrideReply || aiResult.reply;
 
     // Lưu tin nhắn AI (chỉ lưu phần reply text, không lưu JSON products)
     const aiMsgId = await genMessageId();
     const aiMessage = await Message.create({
       Message_id: aiMsgId,
       Session_id: sessionId,
-      Content: aiResult.reply,
+      Content: overrideReply || aiResult.reply,
       Products_json: products.length > 0 ? JSON.stringify(products) : null,
+      Vouchers_json: voucherResults.length > 0 ? JSON.stringify(voucherResults) : null,
       Sender_type: "ai",
       Created_at: new Date(),
     });
@@ -230,6 +273,7 @@ Quy tắc suggestions: sinh ra 4 gợi ý ngắn (dưới 40 ký tự) phù hợ
       data: {
         message: aiMessage,
         products,
+        vouchers: voucherResults,
         suggestions: aiResult.suggestions || [],
       },
     });
@@ -260,17 +304,6 @@ exports.deleteSession = async (req, res) => {
     await Session.deleteOne({ Session_id: sessionId });
 
     res.json({ success: true, message: "Đã xóa cuộc trò chuyện" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-exports.sendGuestMessage = async (req, res) => {
-  try {
-    const { content, history = [] } = req.body;
-    // Dùng lại systemPrompt + gọi Groq giống sendMessage
-    // Không lưu DB, chỉ trả về reply + products + suggestions
-    // (copy logic Groq từ sendMessage, bỏ phần lưu Message/Session)
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
