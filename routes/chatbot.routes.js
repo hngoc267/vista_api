@@ -3,8 +3,6 @@ const router = express.Router();
 const authMiddleware = require("../middleware/auth.middleware");
 const chatbotController = require("../controllers/chatbot.controller");
 
-const { sendGuestMessage } = require('../controllers/chatbot.controller');
-router.post('/sessions/guest-message', sendGuestMessage);
 // Toàn bộ route chatbot yêu cầu đăng nhập
 router.use(authMiddleware);
 
