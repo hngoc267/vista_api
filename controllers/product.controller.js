@@ -387,7 +387,53 @@
     }
   };
 
-  // 9. SMART SEARCH — Tìm kiếm thông minh bằng AI (Đã sửa lỗi lệch giá do Discount khuyến mãi & Thêm thông báo khi rỗng)
+// 9. SO SÁNH SẢN PHẨM (LẤY NHIỀU VARIANT)
+exports.compareProducts = async (req, res) => {
+  try {
+    const { variantIds } = req.query;
+    if (!variantIds) {
+      return res.status(400).json({ success: false, message: 'Thiếu variantIds' });
+    }
+
+    const ids = variantIds.split(',');
+    const results = [];
+
+    for (const variantId of ids) {
+      // Tìm variant
+      const variant = await Product_variant.findOne({ 
+        Product_variant_id: variantId,
+        Status: 'active'
+      }).lean();
+
+      if (!variant) continue;
+
+      // Tìm product cha
+      const product = await Product.findOne({ 
+        Product_id: variant.Product_id,
+        Status: 'on_sale'
+      }).lean();
+
+      if (!product) continue;
+
+      // Tìm category và brand
+      const category = await Category.findOne({ Category_id: product.Category_id }).lean();
+      const brand = await Brand.findOne({ Brand_id: product.Brand_id }).lean();
+
+      results.push({
+        ...product,
+        selectedVariantId: variantId,
+        variants: [variant], // Gửi kèm variant để dễ lấy giá
+        category: category,
+        brand: brand
+      });
+    }
+
+    res.json({ success: true, data: results });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+  // 10. SMART SEARCH — Tìm kiếm thông minh bằng AI (Đã sửa lỗi lệch giá do Discount khuyến mãi & Thêm thông báo khi rỗng)
   exports.smartSearch = async (req, res) => {
     try {
       const { query } = req.body;

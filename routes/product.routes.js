@@ -23,6 +23,9 @@ router.get("/", productController.getAllProducts);
 // Lấy sản phẩm theo danh mục
 router.get("/category/:categoryId", productController.getProductsByCategory);
 
+// So sánh sản phẩm (theo variantIds)
+router.get('/compare', productController.compareProducts);
+
 // Lấy sản phẩm liên quan
 router.get("/:id/related", productController.getRelatedProducts);
 
