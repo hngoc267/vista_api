@@ -34,45 +34,22 @@ function normalizePaymentType(value) {
   return cleanString(value) || "COD";
 }
 
+function buildShippingAddress(address) {
+  return [
+    cleanString(address?.Specific_address),
+    cleanString(address?.Ward),
+    cleanString(address?.District),
+    cleanString(address?.Province),
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
 function calculateProductFinalPrice(originalPrice, product) {
   const discount = Math.max(0, Math.min(100, Number(product?.Discount) || 0));
   return Math.round(Number(originalPrice || 0) * (100 - discount) / 100);
 }
 
-function isSpecificAddressRealistic(value) {
-  const text = cleanString(value);
-  const normalized = normalizeText(text);
-
-  if (text.length < 5) {
-    return false;
-  }
-
-  if (/^\d+$/.test(text)) {
-    return false;
-  }
-
-  const hasNumber = /\d/.test(text);
-  const hasLetter = /[a-zA-ZÀ-ỹ]/.test(text);
-  const hasAddressKeyword = [
-    "duong",
-    "pho",
-    "hem",
-    "ngo",
-    "so",
-    "thon",
-    "xom",
-    "ap",
-    "ban",
-    "to",
-    "khu",
-    "toa",
-    "chung cu",
-    "quoc lo",
-    "tinh lo",
-  ].some((keyword) => normalized.includes(keyword));
-
-  return hasNumber && hasLetter && hasAddressKeyword;
-}
 
 function validateAddress(address) {
   if (
@@ -95,9 +72,6 @@ function validateAddress(address) {
     return "Email nhận hàng không hợp lệ.";
   }
 
-  if (!isSpecificAddressRealistic(address.Specific_address)) {
-    return "Địa chỉ chi tiết cần có số nhà và tên đường/thôn/xóm/tổ/khu thực tế, không chỉ nhập mỗi số.";
-  }
 
   return "";
 }
@@ -149,6 +123,17 @@ exports.createOrder = async (req, res) => {
         message: addressError,
       });
     }
+
+    const shippingAddressSnapshot = {
+      Receiver_name: cleanString(address.Receiver_name),
+      Receiver_phone: cleanString(address.Receiver_phone),
+      Email: cleanString(address.Email),
+      Province: cleanString(address.Province),
+      District: cleanString(address.District),
+      Ward: cleanString(address.Ward),
+      Specific_address: cleanString(address.Specific_address),
+      Address: buildShippingAddress(address),
+    };
 
     const variantIds = [...new Set(orderDetails.map((item) => cleanString(item.Product_variant_id)).filter(Boolean))];
     const variants = await Product_variant.find({
@@ -221,6 +206,7 @@ exports.createOrder = async (req, res) => {
     await Order.create({
       Order_id: orderId,
       User_id: userId,
+      ...shippingAddressSnapshot,
       Status: orderStatus,
       Voucher_id: appliedVoucher.voucherId || null,
       Voucher_code: appliedVoucher.code || "",
