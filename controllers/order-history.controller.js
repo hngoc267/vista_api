@@ -149,16 +149,16 @@ function normalizePaymentType(value) {
   return cleanText(value) || 'COD';
 }
 
-function buildShippingAddress(addressInfo) {
-  if (!addressInfo) {
+function buildShippingAddress(addressSnapshot) {
+  if (!addressSnapshot) {
     return '';
   }
 
   return [
-    addressInfo.Specific_address,
-    addressInfo.Ward,
-    addressInfo.District,
-    addressInfo.Province,
+    addressSnapshot.Specific_address,
+    addressSnapshot.Ward,
+    addressSnapshot.District,
+    addressSnapshot.Province,
   ]
     .map(cleanText)
     .filter(Boolean)
@@ -305,18 +305,6 @@ const getOrderHistory = async (req, res) => {
           as: 'ReturnInfo'
         }
       },
-      {
-        $lookup: {
-          from: 'Address',
-          let: { userId: '$User_id' },
-          pipeline: [
-            { $match: { $expr: { $eq: ['$User_id', '$$userId'] } } },
-            { $sort: { Is_default: -1 } },
-            { $limit: 1 }
-          ],
-          as: 'AddressInfo'
-        }
-      },
       { $sort: { Created_at: -1 } }
     ]).allowDiskUse(true);
 
@@ -326,10 +314,21 @@ const getOrderHistory = async (req, res) => {
       const paymentStatus = cleanText(paymentInfo?.Payment_status || 'pending');
       const paymentType = normalizePaymentType(paymentInfo?.Payment_type);
       const deliveryInfo = order.DeliveryInfo && order.DeliveryInfo.length > 0 ? order.DeliveryInfo[0] : null;
-      const addressInfo = order.AddressInfo && order.AddressInfo.length > 0 ? order.AddressInfo[0] : null;
       const returnSummary = summarizeReturnRequests(order.ReturnInfo || []);
       const resolvedStatus = resolveHistoryStatus(order, paymentInfo);
       const currentStatus = cleanText(order.Status);
+      const orderAddressSnapshot = {
+        Receiver_name: cleanText(order.Receiver_name || ''),
+        Receiver_phone: cleanText(order.Receiver_phone || ''),
+        Email: cleanText(order.Email || ''),
+        Province: cleanText(order.Province || ''),
+        District: cleanText(order.District || ''),
+        Ward: cleanText(order.Ward || ''),
+        Specific_address: cleanText(order.Specific_address || ''),
+        Address: cleanText(order.Address || ''),
+      };
+      const snapshotAddress = orderAddressSnapshot.Address || buildShippingAddress(orderAddressSnapshot);
+      const displayAddress = snapshotAddress || '';
 
       if (resolvedStatus && resolvedStatus !== currentStatus) {
         const orderUpdate = { Status: resolvedStatus };
@@ -356,6 +355,42 @@ const getOrderHistory = async (req, res) => {
         );
       }
 
+      const formattedItems = (order.RawItems || []).map((item, i) => {
+        const productImage = item.ProductInfo && item.ProductInfo.Images && item.ProductInfo.Images.length > 0
+          ? '/assets/images/' + item.ProductInfo.Images[0]
+          : '/assets/images/default-product.png';
+
+        const productName = item.ProductInfo ? item.ProductInfo.Product_name : item.Variant_name;
+        const variantId = item.Product_variant_id || item.VariantInfo?.Product_variant_id || '';
+        const reviewId = cleanText(item.ReviewInfo?.Review_id || '');
+        const returnItem = (returnSummary.Return_items || []).find(
+          (requestItem) => requestItem.Product_variant_id === variantId
+        );
+
+        return {
+          Product_id: item.ProductInfo ? item.ProductInfo.Product_id : (i + 1),
+          Product_variant_id: variantId,
+          productVariantId: variantId,
+          Order_detail_id: item.Order_detail_id,
+          Review_id: reviewId,
+          Review_status: reviewId ? 'reviewed' : 'not_reviewed',
+          Review_rating: item.ReviewInfo?.Rating || 0,
+          Product_name: productName,
+          Variant_name: item.Variant_name,
+          Price: item.Price,
+          Original_price: item.Original_price || (item.VariantInfo ? item.VariantInfo.Price : 0) || 0,
+          Discount_percent: item.Discount_percent || item.ProductInfo?.Discount || 0,
+          Quantity: item.Quantity,
+          Return_quantity: returnItem?.Return_quantity || 0,
+          Return_refund_amount: returnItem?.Refund_amount || 0,
+          Is_returned_item: !!returnItem,
+          Total_price: item.Total_price || ((item.Price || 0) * (item.Quantity || 0)),
+          Image: productImage
+        };
+      });
+      const derivedReviewStatus = formattedItems.length > 0 && formattedItems.every((item) => item.Review_status === 'reviewed')
+        ? 'reviewed'
+        : 'not_reviewed';
       return {
         Order_id: index + 1, 
         Order_code: order.Order_id, 
@@ -381,18 +416,18 @@ const getOrderHistory = async (req, res) => {
         Return_address: returnSummary.Return_address,
         Return_tracking_number: returnSummary.Return_tracking_number,
         Return_evidence_images: returnSummary.Return_evidence_images,
-        Review_status: order.Review_status || 'not_reviewed',
+        Review_status: derivedReviewStatus,
         Processing_started_at: order.Processing_started_at || null,
-        Customer_name: userInfo?.Full_name || order.Customer_name || '',
-        Phone_number: userInfo?.Phone_number || order.Phone_number || '',
-        Email: userInfo?.Email || order.Email || '',
-        Address: buildShippingAddress(addressInfo) || order.Address || '',
-        Receiver_name: addressInfo?.Receiver_name || userInfo?.Full_name || '',
-        Receiver_phone: addressInfo?.Receiver_phone || userInfo?.Phone_number || '',
-        Province: addressInfo?.Province || '',
-        District: addressInfo?.District || '',
-        Ward: addressInfo?.Ward || '',
-        Specific_address: addressInfo?.Specific_address || '',
+        Customer_name: orderAddressSnapshot.Receiver_name || userInfo?.Full_name || order.Customer_name || '',
+        Phone_number: orderAddressSnapshot.Receiver_phone || userInfo?.Phone_number || order.Phone_number || '',
+        Email: orderAddressSnapshot.Email || userInfo?.Email || order.Email || '',
+        Address: displayAddress,
+        Receiver_name: orderAddressSnapshot.Receiver_name || userInfo?.Full_name || '',
+        Receiver_phone: orderAddressSnapshot.Receiver_phone || userInfo?.Phone_number || '',
+        Province: orderAddressSnapshot.Province,
+        District: orderAddressSnapshot.District,
+        Ward: orderAddressSnapshot.Ward,
+        Specific_address: orderAddressSnapshot.Specific_address,
         Voucher_id: order.Voucher_id || null,
         Voucher_code: order.Voucher_code || '',
         Voucher_title: order.Voucher_title || '',
@@ -421,40 +456,7 @@ const getOrderHistory = async (req, res) => {
         Order_notes: order.Order_notes || '',
         // --------------------------------------------------------------
         
-        Items: order.RawItems.map((item, i) => {
-          const productImage = item.ProductInfo && item.ProductInfo.Images && item.ProductInfo.Images.length > 0
-            ? `/assets/images/${item.ProductInfo.Images[0]}`
-            : '/assets/images/default-product.png';
-            
-          const productName = item.ProductInfo ? item.ProductInfo.Product_name : item.Variant_name;
-          const variantId = item.Product_variant_id || item.VariantInfo?.Product_variant_id || '';
-          const returnItem = (returnSummary.Return_items || []).find(
-            (requestItem) => requestItem.Product_variant_id === variantId
-          );
-
-          return {
-            Product_id: item.ProductInfo ? item.ProductInfo.Product_id : (i + 1), 
-            Product_variant_id: variantId,
-            productVariantId: variantId,
-            Order_detail_id: item.Order_detail_id,
-            Review_id: item.ReviewInfo?.Review_id || '',
-            Review_status: item.ReviewInfo?.Review_id
-                ? 'reviewed'
-                : 'not_reviewed',
-            Review_rating: item.ReviewInfo?.Rating || 0,
-            Product_name: productName,
-            Variant_name: item.Variant_name,
-            Price: item.Price,
-            Original_price: item.Original_price || (item.VariantInfo ? item.VariantInfo.Price : 0) || 0,
-            Discount_percent: item.Discount_percent || item.ProductInfo?.Discount || 0,
-            Quantity: item.Quantity,
-            Return_quantity: returnItem?.Return_quantity || 0,
-            Return_refund_amount: returnItem?.Refund_amount || 0,
-            Is_returned_item: !!returnItem,
-            Total_price: item.Total_price || ((item.Price || 0) * (item.Quantity || 0)),
-            Image: productImage
-          };
-        })
+        Items: formattedItems
       };
     }));
 
