@@ -143,7 +143,6 @@
           filter.Brand_id = "NOT_FOUND";
         }
       }
-      if (search) filter.Product_name = { $regex: search, $options: "i" };
       
       // LOGIC CHUẨN:
       if (req.query.isFlashSale === 'true') {
@@ -490,7 +489,7 @@ exports.compareProducts = async (req, res) => {
           "Authorization": `Bearer ${process.env.GROQ_API_KEY}` 
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: "llama-3.3-70b-versatile",
           response_format: { type: "json_object" }, // Bắt buộc trả về JSON
           max_tokens: 256,
           temperature: 0.1, // Giảm tối đa sự sáng tạo để tăng tính chính xác logic
@@ -531,6 +530,36 @@ exports.compareProducts = async (req, res) => {
       
       // Gán brand từ detection thủ công vào intent
       intent.brand = detectedBrand || null;
+      // Detect cross-category keywords (xuất hiện ở cả CAT_005 và CAT_006)
+      const crossCategoryTypes = ['chuột', 'bàn phím', 'tai nghe', 'loa', 'microphone', 'tay cầm'];
+      const crossMatch = crossCategoryTypes.find(t => query.toLowerCase().includes(t));
+
+      if (crossMatch) {
+        // Bỏ qua category, chỉ filter theo tên sản phẩm trên toàn DB
+        const crossFilter = { Status: "on_sale", Product_name: { $regex: crossMatch, $options: 'i' } };
+        let crossProducts = await Product.find(crossFilter).lean();
+        
+        crossProducts = await Promise.all(crossProducts.map(async (p) => {
+          const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
+          const originalPrice = variant?.Price || 0;
+          const finalPrice = originalPrice - (originalPrice * (p.Discount || 0) / 100);
+          return { ...p, min_price: originalPrice, final_price: finalPrice };
+        }));
+
+        if (intent.minPrice) crossProducts = crossProducts.filter(p => p.final_price >= intent.minPrice);
+        if (intent.maxPrice) crossProducts = crossProducts.filter(p => p.final_price <= intent.maxPrice);
+        crossProducts.sort((a, b) => (b.Average_rating || 0) - (a.Average_rating || 0));
+
+        const finalData = crossProducts.slice(0, 6).map(p => ({
+          ...p,
+          min_price: p.final_price,
+          original_price: p.min_price,
+          aiTag: "✦ AI đề xuất"
+        }));
+
+        console.log(`-> Cross-category search "${crossMatch}": ${finalData.length} sản phẩm`);
+        return res.json({ success: true, data: finalData, intent, message: "Thành công" });
+      }
       console.log("Intent final phân tích bởi AI:", intent);
   
       // BƯỚC 2: Build filter chính xác
@@ -580,27 +609,23 @@ exports.compareProducts = async (req, res) => {
         ).trim();
       }
 
-      // Loại keyword cảm tính
       const semanticKeywords = [
-        "siêu mạnh",
-        "mạnh",
-        "gaming",
-        "đồ họa",
-        "cao cấp",
-        "mượt",
-        "nhẹ",
-        "gọn",
-        "đẹp",
-        "pin trâu",
-        "học tập",
-        "văn phòng",
-        "chơi game"
+        "siêu mạnh", "mạnh", "gaming", "đồ họa", "cao cấp",
+        "mượt", "nhẹ", "gọn", "đẹp", "pin trâu",
+        "học tập", "văn phòng", "chơi game",
+        "giá rẻ", "rẻ", "tốt", "phù hợp",
+        "bàn phím", "chuột", "tai nghe", "loa", "sạc",
+        "phụ kiện", "cáp", "hub", "màn hình",
+        "giá rẻ", "rẻ", "tốt", "phù hợp",
+        "tai nghe", "loa", "microphone",   
+        "chuột gaming", "bàn phím cơ", "tay cầm", "tai nghe gaming",
+        "loa bluetooth", "micro", "microphone",
       ];
 
       const containsOnlySemantic =
         cleanedKeyword &&
-        semanticKeywords.includes(
-          cleanedKeyword.toLowerCase()
+        semanticKeywords.some(kw =>
+          cleanedKeyword.toLowerCase().includes(kw)
         );
 
       // Áp dụng filter Product_name
@@ -619,6 +644,30 @@ exports.compareProducts = async (req, res) => {
           cleanedKeyword
         );
 
+      } else if (
+        containsOnlySemantic &&
+        (filter.Category_id === 'CAT_005' || filter.Category_id === 'CAT_006')
+      ) {
+        const accessoryTypes = ['chuột', 'bàn phím', 'tai nghe', 'loa', 'sạc', 'hub', 'cáp', 'màn hình', 'tay cầm', 'microphone'];
+        const matchedType = accessoryTypes.find(t => cleanedKeyword?.toLowerCase().includes(t));
+        if (matchedType) {
+          filter.Product_name = { $regex: matchedType, $options: 'i' };
+          console.log("-> Lọc theo loại sản phẩm:", matchedType);
+        } else {
+          console.log("-> Chỉ lọc theo category");
+        }
+
+      } else if (
+        containsOnlySemantic &&
+        !filter.Category_id
+      ) {
+        // Không có category → tìm theo tên sản phẩm trên toàn bộ DB
+        const accessoryTypes = ['chuột', 'bàn phím', 'tai nghe', 'loa', 'sạc', 'hub', 'cáp', 'màn hình', 'tay cầm', 'microphone'];
+        const matchedType = accessoryTypes.find(t => cleanedKeyword?.toLowerCase().includes(t));
+        if (matchedType) {
+          filter.Product_name = { $regex: matchedType, $options: 'i' };
+          console.log("-> Tìm cross-category theo loại:", matchedType);
+        }
       } else if (
         !cleanedKeyword &&
         !filter.Brand_id &&

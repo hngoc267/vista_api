@@ -143,22 +143,18 @@ exports.sendMessage = async (req, res) => {
     }));
 
     // ── Gọi Groq ─────────────────────────────
-    const systemPrompt = `Bạn là VISTA AI Assistant, chuyên tư vấn sản phẩm công nghệ tại cửa hàng VISTA.
-Nhiệm vụ: Phân tích yêu cầu khách hàng và trả về JSON duy nhất (không giải thích, không markdown).
+    // ── GROQ LẦN 1: Chỉ trích intent ────────────
+    const intentPrompt = `Phân tích yêu cầu sau và trả về JSON duy nhất, không giải thích:
+    Yêu cầu: "${content}"
 
-JSON phải có cấu trúc:
-{
-  "reply": "<câu trả lời tự nhiên thân thiện bằng tiếng Việt, dưới 120 từ>",
-  "category": "<Laptop|Smartphone|Tablet|Thiết bị âm thanh|Phụ kiện công nghệ|Thiết bị gaming|null>",
-  "maxPrice": <số nguyên (đơn vị VNĐ) hoặc null>,
-  "keywords": ["<từ khóa 1>", "<từ khóa 2>"],
-  "hasProducts": <true nếu cần tìm sản phẩm, false nếu chỉ hỏi thông thường>,
-  "suggestions": ["<gợi ý câu hỏi tiếp theo ngắn gọn 1>", "<gợi ý 2>", "<gợi ý 3>", "<gợi ý 4>"]
-}
+    {
+      "category": "<Laptop|Smartphone|Tablet|Thiết bị âm thanh|Phụ kiện công nghệ|Thiết bị gaming|null>",
+      "maxPrice": <số nguyên VNĐ hoặc null>,
+      "hasProducts": <true nếu cần tìm sản phẩm, false nếu hỏi thông thường>,
+      "suggestions": ["<gợi ý 1 ngắn dưới 40 ký tự>", "<gợi ý 2>", "<gợi ý 3>", "<gợi ý 4>"]
+    }`;
 
-Quy tắc suggestions: sinh ra 4 gợi ý ngắn (dưới 40 ký tự) phù hợp ngữ cảnh câu vừa trả lời.`;
-
-    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const intentRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -166,43 +162,41 @@ Quy tắc suggestions: sinh ra 4 gợi ý ngắn (dưới 40 ký tự) phù hợ
       },
       body: JSON.stringify({
         model: "llama-3.1-8b-instant",
-        max_tokens: 600,
-        temperature: 0.3,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...historyForGroq,
-        ],
+        max_tokens: 300,
+        temperature: 0.1,
+        messages: [{ role: "user", content: intentPrompt }],
       }),
     });
 
-    const groqData = await groqRes.json();
-
-    if (!groqData.choices?.[0]) {
-      throw new Error("Groq API không phản hồi: " + JSON.stringify(groqData));
+    const intentData = await intentRes.json();
+    const intentRaw = intentData.choices[0].message.content
+      .replace(/```json|```/g, "").trim();
+    let intent;
+    try {
+      intent = JSON.parse(intentRaw);
+      // Nếu Groq trả về format lạ (không có hasProducts) thì reset
+      if (!('hasProducts' in intent)) {
+        intent = { category: null, maxPrice: null, hasProducts: false, suggestions: [] };
+      }
+    } catch {
+      intent = { category: null, maxPrice: null, hasProducts: false, suggestions: [] };
     }
+    console.log("Intent:", JSON.stringify(intent, null, 2));
 
-    // Parse JSON từ Groq (bỏ markdown fence nếu có)
-    const raw = groqData.choices[0].message.content
-      .replace(/```json|```/g, "")
-      .trim();
-    const aiResult = JSON.parse(raw);
-    console.log("Chatbot AI result:", JSON.stringify(aiResult, null, 2));
-
-    // ── Tìm sản phẩm/voucher từ DB nếu cần ─
+    // ── QUERY DB ─────────────────────────────────
     let products = [];
     let voucherResults = [];
-
-    const voucherKeywords = ['mã giảm giá', 'mã khuyến mãi', 'voucher', 'mã giam gia', 'chương trình ưu đãi', 'chuong trinh uu dai', 'coupon'];
+    const voucherKeywords = ['voucher', 'mã giảm giá', 'mã khuyến mãi', 'coupon', 'chương trình ưu đãi'];
     const isVoucherIntent = voucherKeywords.some(kw => content.toLowerCase().includes(kw));
-
-    const flashKeywords = ['flash sale', 'sale hôm nay', 'đang giảm', 'hàng sale', 'sản phẩm giảm giá', 'sản phẩm đang sale'];
+    const flashKeywords = ['flash sale', 'sale hôm nay', 'hàng sale', 'sản phẩm đang sale', 
+  'sản phẩm giảm giá', 'đang giảm giá', 'có giảm giá', 'sản phẩm sale', 'ưu đãi hôm nay'];
     const isFlashIntent = !isVoucherIntent && flashKeywords.some(kw => content.toLowerCase().includes(kw));
+    const crossCategoryTypes = ['chuột', 'bàn phím', 'tai nghe', 'loa', 'microphone', 'tay cầm'];
+    const crossMatch = crossCategoryTypes.find(t => content.toLowerCase().includes(t));
 
     let overrideReply = null;
-
     if (isVoucherIntent) {
       voucherResults = await Voucher.find({ status: { $ne: 'used' } }).limit(5).lean();
-
       if (voucherResults.length > 0) {
         const list = voucherResults.map(v => `${v.code} (${v.title})`).join(", ");
         overrideReply = `Hiện VISTA có ${voucherResults.length} mã giảm giá: ${list}. Xem chi tiết bên dưới nhé!`;
@@ -216,31 +210,53 @@ Quy tắc suggestions: sinh ra 4 gợi ý ngắn (dưới 40 ký tự) phù hợ
         const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: 'active' }).sort({ Price: 1 }).lean();
         return { ...p, min_price: variant?.Price || 0 };
       }));
-      products = flashProducts.slice(0, 4).map((p) => ({ ...p, aiTag: "⚡ Flash Sale" }));
+      products = flashProducts.slice(0, 4).map(p => ({ ...p, aiTag: "⚡ Flash Sale" }));
       overrideReply = `VISTA đang có ${flashProducts.length} sản phẩm Flash Sale hôm nay, giảm giá cực sốc!`;
 
-    } else if (aiResult.hasProducts === true) {
-      const filter = { Status: "on_sale" };
+    } else if (crossMatch) {
+      let crossProducts = await Product.find({
+        Status: "on_sale",
+        Product_name: { $regex: crossMatch, $options: 'i' }
+      }).lean();
 
-      if (aiResult.category && aiResult.category !== "null") {
+      crossProducts = await Promise.all(crossProducts.map(async (p) => {
+        const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
+        return { ...p, min_price: variant?.Price || 0 };
+      }));
+
+      if (intent.maxPrice) crossProducts = crossProducts.filter(p => p.min_price <= intent.maxPrice);
+      crossProducts.sort((a, b) => (b.Average_rating || 0) - (a.Average_rating || 0));
+
+      products = crossProducts.slice(0, 6).map((p, i) => ({
+        ...p,
+        aiTag: "AI Đề xuất",
+        matchScore: Math.max(96 - i * 3, 75),
+      }));
+
+    } else if (intent.hasProducts === true || (intent.category && intent.category !== "null")) {
+      const filter = { Status: "on_sale" };
+      const subKeywords = ['chuột', 'bàn phím', 'tai nghe', 'loa', 'sạc', 'hub', 'màn hình'];
+      const matchedSub = subKeywords.find(kw => content.toLowerCase().includes(kw));
+      if (matchedSub) {
+        filter.Product_name = { $regex: matchedSub, $options: 'i' };
+      }
+      if (intent.category && intent.category !== "null") {
         const cat = await Category.findOne({
-          Category_name: { $regex: aiResult.category, $options: "i" },
+          Category_name: { $regex: intent.category, $options: "i" },
         }).lean();
         if (cat) filter.Category_id = cat.Category_id;
       }
 
       let found = await Product.find(filter).lean();
-      found = await Promise.all(
-        found.map(async (p) => {
-          const variant = await Product_variant.findOne({
-            Product_id: p.Product_id, Status: "active",
-          }).sort({ Price: 1 }).lean();
-          return { ...p, min_price: variant?.Price || 0 };
-        })
-      );
+      found = await Promise.all(found.map(async (p) => {
+        const variant = await Product_variant.findOne({
+          Product_id: p.Product_id, Status: "active",
+        }).sort({ Price: 1 }).lean();
+        return { ...p, min_price: variant?.Price || 0 };
+      }));
 
-      if (aiResult.maxPrice) {
-        found = found.filter((p) => p.min_price <= aiResult.maxPrice);
+      if (intent.maxPrice) {
+        found = found.filter(p => p.min_price <= intent.maxPrice);
       }
 
       products = found.slice(0, 4).map((p, i) => ({
@@ -249,15 +265,65 @@ Quy tắc suggestions: sinh ra 4 gợi ý ngắn (dưới 40 ký tự) phù hợ
         matchScore: Math.max(96 - i * 4, 75),
       }));
     }
+    // ── GROQ LẦN 2: Viết reply dựa trên sản phẩm thật ──
+    let finalReply = overrideReply;
 
-    const finalReply = overrideReply || aiResult.reply;
+    if (!overrideReply) {
+      // Chuẩn bị context sản phẩm thật để đưa vào prompt
+      const productContext = products.length > 0
+        ? `Danh sách sản phẩm THẬT đang bán tại VISTA:\n` +
+          products.map((p, i) =>
+            `${i + 1}. ${p.Product_name} - ${(p.min_price || 0).toLocaleString('vi-VN')}đ - CPU: ${p.Technical_specs?.CPU || p.Technical_specs?.Chipset || 'N/A'}`
+          ).join("\n")
+        : "Không có sản phẩm cụ thể nào cần đề cập.";
+
+      // Lấy lịch sử chat để Groq có context
+      const historyForGroq2 = recentMessages.map(m => ({
+        role: m.Sender_type === "user" ? "user" : "assistant",
+        content: m.Content,
+      }));
+
+      const replySystemPrompt = products.length > 0
+        ? `Bạn là VISTA AI Assistant. 
+      Câu hỏi của user: "${content}"
+      Danh sách sản phẩm THẬT đang bán tại VISTA:
+      ${productContext}
+
+      Hãy CHỈ đề cập đến sản phẩm phù hợp với câu hỏi (ví dụ: nếu hỏi chuột thì chỉ nhắc sản phẩm là chuột, không nhắc bàn phím hay phụ kiện khác).
+      TUYỆT ĐỐI không bịa tên sản phẩm ngoài danh sách trên.
+      Viết ngắn gọn, thân thiện tiếng Việt, dưới 80 từ.`
+        : `Bạn là VISTA AI Assistant. VISTA chưa có sản phẩm phù hợp. Xin lỗi và gợi ý liên hệ shop. KHÔNG tự đề xuất tên sản phẩm cụ thể.`;
+
+      const replyRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 300,
+          temperature: 0.4,
+          messages: [
+            { role: "system", content: replySystemPrompt },
+            ...historyForGroq2,
+            { role: "user", content: content },
+          ],
+        }),
+      });
+
+      const replyData = await replyRes.json();
+      finalReply = replyData.choices?.[0]?.message?.content?.trim() || "Mình đã tìm được một số sản phẩm phù hợp cho bạn!";
+    }
+
+    console.log("Final reply:", finalReply);
 
     // Lưu tin nhắn AI (chỉ lưu phần reply text, không lưu JSON products)
     const aiMsgId = await genMessageId();
     const aiMessage = await Message.create({
       Message_id: aiMsgId,
       Session_id: sessionId,
-      Content: overrideReply || aiResult.reply,
+      Content: finalReply,
       Products_json: products.length > 0 ? JSON.stringify(products) : null,
       Vouchers_json: voucherResults.length > 0 ? JSON.stringify(voucherResults) : null,
       Sender_type: "ai",
@@ -274,7 +340,7 @@ Quy tắc suggestions: sinh ra 4 gợi ý ngắn (dưới 40 ký tự) phù hợ
         message: aiMessage,
         products,
         vouchers: voucherResults,
-        suggestions: aiResult.suggestions || [],
+        suggestions: intent.suggestions || [],
       },
     });
   } catch (error) {

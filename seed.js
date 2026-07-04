@@ -364,7 +364,7 @@ const productsData = [
   // ============================================================
   {
     product: {
-      Product_id: "PRD_019", Category_id: "CAT_004", Brand_id: "BRD_012", Product_name: "Sony WH-1000XM5",
+      Product_id: "PRD_019", Category_id: "CAT_004", Brand_id: "BRD_012", Product_name: "Tai nghe chụp tai Sony WH-1000XM5",
       Description: "Tai nghe chụp tai Bluetooth sở hữu công nghệ cấu trúc chống ồn chủ động thông minh hàng đầu thế giới cản sạch mọi tạp âm cuộc sống, tích hợp âm thanh độ phân giải cao Hi-Res Audio mang lại trải nghiệm âm nhạc tinh khiết.",
       Images: ["sony-wh1000xm5-black.jpg"], Average_rating: 4.8, Total_reviews: 187, Status: "on_sale", Discount: 15, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Tai nghe chụp tai Over-ear", Driver: "30mm Neodymium tinh chỉnh", Frequency: "4Hz - 40000Hz", ANC: "Chống ồn chủ động Adaptive ANC thông minh", Battery: "30 giờ bật ANC (Sạc nhanh 3 phút dùng 3 giờ)", Connectivity: "Bluetooth 5.2, Jack 3.5mm đa điểm", Microphone: "8 Micro tích hợp thuật toán AI lọc gió", Weight: "250g", Usage_Type: "Nghe nhạc Hi-Fi, Cách âm làm việc văn phòng, Đi máy bay", User_Segment: "Audiophile, Người làm việc tập trung, Doanh nhân", Performance_Level: "Premium Cao cấp", AI_Tag: "tai-nghe-sony, chống-ồn-đỉnh-cao, hi-res-audio, pin-30-giờ" }
@@ -373,7 +373,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_020", Category_id: "CAT_004", Brand_id: "BRD_011", Product_name: "JBL Tune 770NC",
+      Product_id: "PRD_020", Category_id: "CAT_004", Brand_id: "BRD_011", Product_name: "Tai nghe chụp tai JBL Tune 770NC",
       Description: "Tai nghe chụp tai Bluetooth sở hữu chất âm bass dày dặn uy lực JBL Pure Bass đặc trưng. Thiết kế đệm tai mềm mại có thể gập gọn gàng cùng thời lượng pin bền bỉ ấn tượng lên đến 44 giờ nghe nhạc liên tục khi bật chống ồn.",
       Images: ["jbl-tune770nc-black.jpg"], Average_rating: 4.4, Total_reviews: 134, Status: "on_sale", Discount: 30, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { Type: "Tai nghe chụp tai Over-ear", Driver: "40mm Driver động", Frequency: "20Hz - 20000Hz", ANC: "Chống ồn chủ động ANC cơ bản", Battery: "44 giờ bật ANC (70 giờ tắt ANC)", Connectivity: "Bluetooth 5.3, Hỗ trợ dây 3.5mm", Microphone: "1 Mic đàm thoại rõ ràng", Weight: "220g", Usage_Type: "Nghe nhạc trẻ bass mạnh, Học online, Giải trí hằng ngày", User_Segment: "Sinh viên, Người dùng phổ thông chuộng Bass", Performance_Level: "Tầm trung giá tốt", AI_Tag: "tai-nghe-jbl, jbl-pure-bass, pin-trâu-44h, giá-sinh-viên" }
@@ -382,7 +382,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_021", Category_id: "CAT_004", Brand_id: "BRD_014", Product_name: "HyperX Cloud Alpha Wireless",
+      Product_id: "PRD_021", Category_id: "CAT_004", Brand_id: "BRD_014", Product_name: "Tai nghe gaming HyperX Cloud Alpha Wireless",
       Description: "Tai nghe gaming chụp tai không dây sở hữu thời lượng pin kỷ lục thế giới lên tới 300 giờ chỉ với một lần sạc đầy. Màng loa buồng đôi Dual Chamber độc quyền bóc tách chi tiết âm thanh chân thực giúp game thủ định vị tiếng bước chân.",
       Images: ["hyperx-cloud-alpha-wireless-black-red.jpg"], Average_rating: 4.7, Total_reviews: 89, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Tai nghe Gaming chụp tai không dây", Driver: "50mm Buồng đôi Dual Chamber", Frequency: "15Hz - 21000Hz", ANC: "Không có cách âm chủ động", Battery: "300 giờ sử dụng liên tục (Kỷ lục thế giới)", Connectivity: "Không dây Wireless 2.4GHz qua USB Dongle độ trễ 0", Microphone: "Micro tháo rời có mút lọc khử tạp âm nền", Weight: "335g", Usage_Type: "Chơi game bắn súng FPS, Livestream game, Cày giải đấu", User_Segment: "Gamer PC chuyên nghiệp, Streamer game", Performance_Level: "Chuyên nghiệp", AI_Tag: "tai-nghe-gaming, pin-300-giờ, không-trễ-2.4ghz, định-vị-âm-thanh" }
@@ -391,7 +391,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_022", Category_id: "CAT_004", Brand_id: "BRD_011", Product_name: "JBL Charge 5 Wi-Fi",
+      Product_id: "PRD_022", Category_id: "CAT_004", Brand_id: "BRD_011", Product_name: "Loa Bluetooth JBL Charge 5 Wi-Fi",
       Description: "Loa Bluetooth di động ngoài trời bền bỉ tích hợp công nghệ kháng nước, kháng bụi bẩn chuẩn IP67 cực tốt. Phiên bản nâng cấp Wi-Fi hỗ trợ truyền tải nhạc chất lượng cao Lossless và tính năng kết nối đa loa AirPlay tiện lợi.",
       Images: ["jbl-charge5-wifi-black.jpg"], Average_rating: 4.6, Total_reviews: 98, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
       Technical_specs: { Type: "Loa di động không dây Bluetooth + Wi-Fi", Driver: "Woofer hình đường đua 52x90mm + Tweeter 20mm", Frequency: "60Hz - 20000Hz", ANC: "Không có", Battery: "20 giờ nghe nhạc liên tục (Tích hợp sạc ngược Powerbank)", Connectivity: "Bluetooth 5.3, Wi-Fi băng tần kép, AirPlay 2", WaterResistance: "Chống nước bụi chuẩn IP67 tuyệt đối", Microphone: "Không tích hợp micro", Weight: "960g", Usage_Type: "Tiệc tùng bể bơi, Du lịch ngoài trời, Loa phát nhạc gia đình", User_Segment: "Người dùng năng động, Giới trẻ thích tụ tập dã ngoại", Performance_Level: "Cao cấp di động", AI_Tag: "loa-jbl, chống-nước-ip67, loa-wifi, kiêm-sạc-dự-phòng" }
@@ -409,7 +409,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_046", Category_id: "CAT_004", Brand_id: "BRD_012", Product_name: "Sony WF-1000XM5 True Wireless",
+      Product_id: "PRD_046", Category_id: "CAT_004", Brand_id: "BRD_012", Product_name: "Tai nghe nhét tai Sony WF-1000XM5 True Wireless",
       Description: "Tai nghe nhét tai không dây sở hữu chip xử lý chống ồn V2 độc quyền cản sạch tạp âm đường phố. Màng loa Dynamic Driver X rộng tái tạo dải âm treble cực trong trẻo, vocal chân thực cùng cảm biến truyền xương đàm thoại đỉnh cao.",
       Images: ["sony-wf1000xm5-black.jpg"], Average_rating: 4.7, Total_reviews: 110, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
       Technical_specs: { Type: "Tai nghe nhét tai True Wireless in-ear", Driver: "Dynamic Driver X công nghệ mới độc quyền", Frequency: "20Hz - 40000Hz (Hi-Res Wireless)", ANC: "Chống ồn chủ động đỉnh cao tích hợp chip xử lý V2", Battery: "8 giờ tai nghe + 16 giờ hộp sạc (Có sạc không dây Qi)", Connectivity: "Bluetooth 5.3, Hỗ trợ codec LDAC truyền nhạc chất lượng cao", Microphone: "6 Mic chống ồn + Cảm biến truyền xương nhạy giọng nói", Weight: "5.9g mỗi bên tai", Usage_Type: "Nghe nhạc chất lượng cao di động, Đàm thoại công việc, Tập thể thao", User_Segment: "Doanh nhân văn phòng, Người yêu nhạc chất lượng cao", Performance_Level: "Flagship True Wireless", AI_Tag: "tai-nghe-nhét-tai, sony-wf, chống-ồn-đỉnh, truyền-xương" }
@@ -418,7 +418,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_047", Category_id: "CAT_004", Brand_id: "BRD_011", Product_name: "JBL Live Pro 2 True Wireless",
+      Product_id: "PRD_047", Category_id: "CAT_004", Brand_id: "BRD_011", Product_name: "Tai nghe nhét tai JBL Live Pro 2 True Wireless",
       Description: "Tai nghe nhét tai không dây hình cuống thời trang ôm khít ống tai êm ái. Tích hợp công nghệ chống ồn tự thích ứng môi trường True Adaptive ANC và cấu trúc 6 micro thu âm chùm tia giúp mọi cuộc gọi hội thoại công việc sắc nét hoàn hảo.",
       Images: ["jbl-live-pro2-silver.jpg"], Average_rating: 4.5, Total_reviews: 74, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Tai nghe nhét tai True Wireless in-ear", Driver: "11mm Driver động chất âm mãnh liệt", Frequency: "20Hz - 20000Hz", ANC: "True Adaptive ANC tự thích ứng môi trường thông minh", Battery: "10 giờ tai nghe + 30 giờ hộp sạc tổng cộng 40h", Connectivity: "Bluetooth 5.2 kết nối đa điểm chuyển đổi thiết bị nhanh", Microphone: "6 Micro chùm tia lọc tạp âm đàm thoại sắc nét", Weight: "4.8g mỗi bên tai", Usage_Type: "Họp hành trực tuyến, Nghe nhạc tập gym năng động, Gọi điện thoại", User_Segment: "Nhân viên văn phòng, Người họp hành nhiều, Sinh viên", Performance_Level: "Tầm trung cao cấp", AI_Tag: "jbl-live, chống-ồn-tự-động, đàm-thoại-6-mic, pin-40-giờ" }
@@ -427,7 +427,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_048", Category_id: "CAT_004", Brand_id: "BRD_001", Product_name: "Apple AirPods Pro 2 Type-C",
+      Product_id: "PRD_048", Category_id: "CAT_004", Brand_id: "BRD_001", Product_name: "Tai nghe nhét tai Apple AirPods Pro 2 Type-C",
       Description: "Tai nghe không dây phân khúc cao cấp nhất của Apple trang bị chip H2 tối tân nâng cấp cơ chế cản tiếng ồn gấp 2 lần. Hộp sạc tích hợp cổng loa phát âm thanh tìm kiếm Find My tiện lợi và chuẩn sạc kết nối Type-C đồng bộ thời đại.",
       Images: ["apple-airpods-pro2-typec.jpg"], Average_rating: 4.8, Total_reviews: 215, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
       Technical_specs: { Type: "Tai nghe nhét tai True Wireless in-ear", Driver: "Driver Apple độ biến dạng thấp tùy chỉnh", Frequency: "Băng thông rộng thích ứng âm học thông minh", ANC: "Chống ồn chủ động ANC chip H2 tăng hiệu năng gấp đôi", Battery: "6 giờ tai nghe + 24 giờ hộp sạc MagSafe Type-C", Connectivity: "Bluetooth 5.3 kết nối đồng bộ tức thì hệ sinh thái Apple", Microphone: "Micro đôi định hướng chùm sóng thu giọng nói trong", Weight: "5.3g mỗi bên tai", Usage_Type: "Đồng bộ thiết bị Apple làm việc giải trí, Chống ồn cao", User_Segment: "Tín đồ Apple, Dân văn phòng cao cấp, Người hay di chuyển", Performance_Level: "Premium Cao cấp", AI_Tag: "airpods-pro, chip-h2, chống-ồn-x2, cổng-typec, sạc-magsafe" }
@@ -436,7 +436,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_049", Category_id: "CAT_004", Brand_id: "BRD_012", Product_name: "Sony SRS-XE200 Wireless Speaker",
+      Product_id: "PRD_049", Category_id: "CAT_004", Brand_id: "BRD_012", Product_name: "Loa Bluetooth Sony SRS-XE200 Wireless",
       Description: "Loa di động không dây sở hữu bộ khuếch tán hình tuyến tính Line-Shape Diffuser độc đáo giúp phân tán dải âm thanh trải rộng, đều khắp mọi góc không gian tiệc tùng mà không làm méo hay giảm suy suy giảm chất lượng nhạc.",
       Images: ["sony-srs-xe200-orange.jpg"], Average_rating: 4.3, Total_reviews: 49, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Loa di động không dây Bluetooth cầm tay", Driver: "Màng loa X-Balanced độc quyền tăng áp suất âm thanh", Frequency: "20Hz - 20000Hz", ANC: "Không có", Battery: "16 giờ nghe nhạc liên tục (Có sạc nhanh 10 phút dùng 70 phút)", Connectivity: "Bluetooth 5.2 hỗ trợ tính năng kết nối nhiều loa Party Connect", WaterResistance: "Kháng nước bụi tuyệt hảo IP67 + Kháng chấn động va đập", Microphone: "Micro tích hợp công nghệ khử tiếng vọng Echo Cancelling", Weight: "800g có dây treo tiện lợi", Usage_Type: "Mang đi dã ngoại, Đạp xe ngoài trời nghe nhạc, Tiệc nhỏ trong phòng", User_Segment: "Giới trẻ thích xê dịch, Phượt thủ, Sinh viên tụ tập dã ngoại", Performance_Level: "Tầm trung bền bỉ", AI_Tag: "loa-sony, khuếch-tán-âm, chống-nước-ip67, chống-va-đập" }
@@ -445,7 +445,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_050", Category_id: "CAT_004", Brand_id: "BRD_016", Product_name: "Anker Soundcore Motion+",
+      Product_id: "PRD_050", Category_id: "CAT_004", Brand_id: "BRD_016", Product_name: "Loa Bluetooth Anker Soundcore Motion+",
       Description: "Sản phẩm loa Bluetooth đạt chứng nhận âm thanh độ phân giải cao Hi-Res Audio vô địch phân khúc giá rẻ. Thiết kế góc nghiêng 15 độ hướng thẳng âm thanh đến tai người nghe, công nghệ loa 3 đường tiếng tái tạo chi tiết dải nhạc sống động.",
       Images: ["anker-soundcore-motion-plus-black.jpg"], Average_rating: 4.6, Total_reviews: 135, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Loa di động không dây để bàn Bluetooth", Driver: "2 Tweeter siêu cao tần + 2 Woofer trầm + 1 Màng cộng hưởng thụ động", Frequency: "50Hz - 40000Hz (Dải tần siêu rộng chuẩn Hi-Res)", Power: "30W Siêu lớn lấp đầy phòng", Battery: "12 giờ nghe nhạc liên tục viên pin 6700mAh", Connectivity: "Bluetooth 5.0 hỗ trợ codec Qualcomm aptX âm thanh nét", WaterResistance: "Chống nước chuẩn IPX7 an toàn lỡ dính mưa", Weight: "1050g đầm chắc", Usage_Type: "Loa nghe nhạc phòng ngủ, Loa trợ giảng, Xem phim laptop bự", User_Segment: "Người chuộng thông số âm thanh, Sinh viên nghe nhạc phòng trọ", Performance_Level: "Phổ thông xuất sắc", AI_Tag: "loa-anker, hi-res-audio, công-suất-30w, giá-rẻ-chất-cao" }
@@ -458,7 +458,7 @@ const productsData = [
   // ============================================================
   {
     product: {
-      Product_id: "PRD_024", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Anker 737 Power Bank 24000mAh",
+      Product_id: "PRD_024", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Sạc dự phòng Anker 737 Power Bank 24000mAh",
       Description: "Sạc dự phòng dung lượng khủng tích hợp màn hình màu thông minh LCD hiển thị thời gian thực công suất dòng điện. Khả năng xả dòng cực đại công suất 140W nạp năng lượng nhanh chóng cho cả máy tính xách tay Laptop và MacBook.",
       Images: ["anker-737-powerbank-black.jpg"], Average_rating: 4.7, Total_reviews: 143, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Pin sạc dự phòng cao cấp", Capacity: "24000 mAh dung lượng lõi", MaxOutput: "140W Sạc nhanh PD 3.1", Ports: "2 cổng USB-C (140W), 1 cổng USB-A (22.5W)", Security: "Hệ thống bảo vệ nhiệt thông minh ActiveShield 2.0", Display: "Màn hình kỹ thuật số hiển thị thông số dòng sạc", Weight: "622g đầm tay", Usage_Type: "Sạc cứu sinh Laptop khi đi công tác, Du lịch dài ngày sạc đa thiết bị", User_Segment: "Kỹ sư hệ thống, Người đi công tác nhiều, Coder di động", Performance_Level: "Đỉnh cao phụ kiện", AI_Tag: "sạc-dự-phòng, anker-140w, dung-lượng-khủng, màn-hình-lcd" }
@@ -467,7 +467,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_025", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Anker 655 USB-C Hub 8-in-1",
+      Product_id: "PRD_025", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Hub USB Anker 655 USB-C Hub 8-in-1",
       Description: "Thiết bị cổng chuyển đổi mở rộng kết nối toàn diện bọc da PU thời trang tinh tế. Hỗ trợ xuất hình ảnh ra màn hình lớn chuẩn phân giải 4K 60Hz mượt mà, truyền file siêu tốc khe cắm thẻ nhớ SD và hỗ trợ nhận nguồn sạc ngược 100W PD.",
       Images: ["anker-655-hub-black.jpg"], Average_rating: 4.5, Total_reviews: 87, Status: "on_sale", Discount: 20, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { Type: "Cổng chuyển đổi mở rộng USB-C Hub", Ports: "1 HDMI (4K@60Hz), 1 USB-C PD 100W, 3 USB-A 3.2, 1 Ethernet RJ45, 1 khe SD, 1 khe microSD", PowerDelivery: "Hỗ trợ pass-through sạc ngược tối đa 100W", Cable: "Dây cáp bọc vải dù bện chống đứt gập giấu gọn", Material: "Khung hợp kim bọc da PU nhám sang trọng", Weight: "115g nhẹ nhàng", Usage_Type: "Mở rộng cổng kết nối cho MacBook mỏng, Xuất màn hình thuyết trình", User_Segment: "Sinh viên MacBook làm đồ án, Dân văn phòng chuyên nghiệp", Performance_Level: "Tầm trung cao cấp", AI_Tag: "hub-chuyển-đổi, anker-hub, xuất-hình-4k-60hz, macbook-hub" }
@@ -476,7 +476,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_026", Category_id: "CAT_005", Brand_id: "BRD_013", Product_name: "Logitech MX Keys S",
+      Product_id: "PRD_026", Category_id: "CAT_005", Brand_id: "BRD_013", Product_name: "Bàn phím Logitech MX Keys S",
       Description: "Bàn phím không dây cao cấp thiết kế công thái học ôm trọn các đầu ngón tay mang lại cảm giác gõ phím vô cùng êm ái, yên tĩnh tĩnh lặng tuyệt đối. Hệ thống đèn thông minh tự động phát sáng khi tay bạn tiến đến gần bàn phím.",
       Images: ["logitech-mx-keys-s-graphite.jpg"], Average_rating: 4.6, Total_reviews: 112, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
       Technical_specs: { Type: "Bàn phím không dây cao cấp full-size", Switch: "Cấu trúc phím cắt kéo Scissor Perfect-Stroke lõm tròn", Backlight: "Đèn nền thông minh tự động thay đổi độ sáng theo môi trường", Connectivity: "Bluetooth Low Energy, Đầu thu Logi Bolt USB bảo mật cao", MultiDevice: "Kết nối và chuyển đổi nhanh giữa 3 thiết bị đồng thời Easy-Switch", Battery: "Sạc Type-C, dùng 10 ngày bật đèn hoặc 5 tháng tắt đèn", Weight: "810g đầm chắc chống trượt", Usage_Type: "Gõ code lập trình lâu dài, Soạn thảo văn bản chuyên sâu đa thiết bị", User_Segment: "Lập trình viên chuyên nghiệp, Business Analyst, Nhà văn", Performance_Level: "Premium Cốt lõi", AI_Tag: "bàn-phím-logitech, mx-keys, gõ-êm, kết-nối-3-máy, đèn-thông-minh" }
@@ -485,7 +485,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_027", Category_id: "CAT_005", Brand_id: "BRD_013", Product_name: "Logitech MX Master 3S",
+      Product_id: "PRD_027", Category_id: "CAT_005", Brand_id: "BRD_013", Product_name: "Chuột Logitech MX Master 3S",
       Description: "Chuột không dây công thái học đỉnh cao nhất hỗ trợ nâng đỡ cổ tay chống đau mỏi khi làm việc cường độ dài. Bánh xe lăn cuộn điện từ MagSpeed cuộn nhanh 1000 dòng Excel trong nháy mắt, nút click không tiếng động tĩnh lặng.",
       Images: ["logitech-mx-master3s-graphite.jpg"], Average_rating: 4.8, Total_reviews: 156, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Chuột không dây công thái học tay phải", Sensor: "Mắt đọc quang học Darkfield theo dấu trên mọi mặt phẳng kể cả kính", DPI: "Tùy chỉnh linh hoạt từ 200 đến 8000 DPI", Buttons: "7 nút bấm chức năng có thể lập trình gán lệnh theo ứng dụng", Scroll: "Bánh xe cuộn điện từ thép MagSpeed siêu tốc + Bánh xe cuộn ngón cái", Connectivity: "Bluetooth LE, Đầu thu không dây Logi Bolt", Battery: "Pin sạc Type-C dùng liên tục lên đến 70 ngày", Weight: "141g công thái học", Usage_Type: "Thiết kế layout phần mềm, Phân tích dữ liệu Excel, Edit đồ họa", User_Segment: "Lập trình viên, Designer đồ họa, Quản trị viên hệ thống", Performance_Level: "Đỉnh cao chuột công sở", AI_Tag: "chuột-công-thái-học, mx-master-3s, cuộn-điện-từ, di-trên-kính" }
@@ -494,7 +494,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_051", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Anker Nano Power Bank 30W",
+      Product_id: "PRD_051", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Sạc dự phòng Anker Nano Power Bank 30W",
       Description: "Pin sạc dự phòng mini nhỏ gọn kích thước hình thỏi son tích hợp sẵn đầu dây sạc cáp chuẩn Type-C dính liền thân máy vô cùng tiện nghi, công suất xả 30W sạc nhanh cấp tốc cho các thiết bị smartphone thế hệ mới.",
       Images: ["anker-nano-powerbank-mint.jpg"], Average_rating: 4.6, Total_reviews: 82, Status: "on_sale", Discount: 15, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Pin sạc dự phòng mini cầm tay", Capacity: "10000 mAh dung lượng thực tế", MaxOutput: "30W Sạc nhanh Power Delivery", Ports: "Tích hợp sẵn 1 dây cáp gắn liền Type-C + 1 cổng USB-C in/out", Security: "Hệ thống kiểm soát nhiệt độ an toàn thông minh", Size: "Kích thước bỏ túi quần nhỏ gọn", Weight: "215g siêu nhẹ", Usage_Type: "Sạc nhanh điện thoại dự phòng khi đi học, đi chơi chụp hình nhiều", User_Segment: "Gen Z năng động, Nữ giới chuộng thiết kế nhỏ xinh, Sinh viên", Performance_Level: "Phổ thông tiện ích", AI_Tag: "sạc-dự-phòng-mini, anker-nano, dây-sạc-liền-thân, sạc-nhanh-30w" }
@@ -503,7 +503,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_052", Category_id: "CAT_005", Brand_id: "BRD_001", Product_name: "Apple Magic Mouse 2024",
+      Product_id: "PRD_052", Category_id: "CAT_005", Brand_id: "BRD_001", Product_name: "Chuột Apple Magic Mouse 2024",
       Description: "Chuột không dây chính hãng Apple sở hữu cấu trúc bề mặt phẳng gương sang trọng hỗ trợ toàn diện các cử chỉ vuốt lướt vuốt chạm cảm ứng thông minh Multi-Touch mượt mà trên nền hệ điều hành macOS thiết kế đồ họa.",
       Images: ["apple-magic-mouse-white.jpg"], Average_rating: 4.2, Total_reviews: 65, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
       Technical_specs: { Type: "Chuột không dây cảm ứng Bluetooth", Sensor: "Mắt đọc quang học chuẩn Apple di mượt", Connectivity: "Bluetooth tự động đồng bộ kết nối tức thì máy Mac", Gesture: "Hỗ trợ vuốt lướt cảm ứng đa điểm cuộn dọc ngang, đổi tab ứng dụng", Battery: "Tích hợp pin sạc Lithium-ion dùng liên tục vài tuần", Weight: "99g tối giản", Usage_Type: "Lướt thiết kế UI/UX, Duyệt tài liệu máy Mac, Làm việc văn phòng sạch gọn", User_Segment: "Người dùng iMac, MacBook Pro, Thiết kế UI chuyên nghiệp", Performance_Level: "Cao cấp tối giản", AI_Tag: "chuột-apple, magic-mouse, cảm-ứng-đa-điểm, đồng-bộ-macbook" }
@@ -512,7 +512,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_053", Category_id: "CAT_005", Brand_id: "BRD_013", Product_name: "Logitech Pebble Keys 2 K380s",
+      Product_id: "PRD_053", Category_id: "CAT_005", Brand_id: "BRD_013", Product_name: "Bàn phím Logitech Pebble Keys 2 K380s",
       Description: "Bàn phím không dây thiết kế siêu mỏng thanh lịch gọn nhẹ chế tác từ nguồn nhựa tái chế bảo vệ môi trường sinh thái. Các nút phím bo tròn giả lập viên sỏi tinh tế gõ nhẹ nhàng, không gây ồn phù hợp mang theo làm việc mọi nơi.",
       Images: ["logitech-pebble-keys2-pink.jpg"], Average_rating: 4.5, Total_reviews: 114, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Bàn phím không dây mỏng nhẹ nhỏ gọn", Switch: "Phím tròn mỏng hành trình ngắn gõ tĩnh lặng silent click", Connectivity: "Bluetooth Low Energy kết nối đa nền tảng (iOS, Android, Windows, Mac)", MultiDevice: "Nút bấm Easy-Switch ghi nhớ kết nối luân chuyển sượt 3 thiết bị", Battery: "Sử dụng 2 viên pin AAA thời lượng chờ lên tới 3 năm", Weight: "415g siêu gọn nhẹ bỏ vừa balo", Usage_Type: "Mang đi cafe học bài, Gõ văn bản trên máy tính bảng iPad nhanh", User_Segment: "Nữ giới văn phòng, Sinh viên thích dịch chuyển làm việc cafe", Performance_Level: "Phổ thông thời trang", AI_Tag: "bàn-phím-logitech, pebble-keys, bàn-phím-tròn, mỏng-nhẹ-cafe" }
@@ -521,7 +521,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_054", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Anker Prime 100W GaN Wall Charger",
+      Product_id: "PRD_054", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Sạc Anker Prime 100W GaN Wall Charger",
       Description: "Củ sạc nhanh công nghệ vật liệu bán dẫn GaN thế hệ mới thu nhỏ kích thước củ sạc xuống siêu gọn gàng bằng hộp tai nghe nhưng mang trong mình tổng công suất xả dòng điện sạc khổng lồ lên tới 100W an toàn.",
       Images: ["anker-prime-100w-gan.jpg"], Average_rating: 4.8, Total_reviews: 93, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Củ sạc nhanh công nghệ bán dẫn GaNPrime", TotalPower: "100W Đầu ra thông minh phân bổ dòng", Ports: "2 cổng USB-C sạc nhanh máy tính, 1 cổng USB-A đa năng sạc pin phụ kiện", Security: "Hệ thống kiểm soát cảm biến nhiệt độ an toàn ActiveShield 2.0", Plug: "Chân cắm dẹt có thể gập gọn gàng chống gãy xước", Weight: "180g siêu nhỏ", Usage_Type: "Củ sạc đơn thay thế toàn bộ cục sạc cồng kềnh trong balo khi đi học", User_Segment: "Học sinh, Sinh viên công nghệ, Lập trình viên di động nhiều", Performance_Level: "Phụ kiện thiết yếu cao cấp", AI_Tag: "củ-sạc-nhanh, anker-prime, công-nghệ-gan-100w, sạc-laptop-điện-thoại" }
@@ -530,7 +530,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_055", Category_id: "CAT_005", Brand_id: "BRD_002", Product_name: "ASUS ROG Strix Scope RX TKL",
+      Product_id: "PRD_055", Category_id: "CAT_005", Brand_id: "BRD_002", Product_name: "Bàn phím cơ ASUS ROG Strix Scope RX TKL",
       Description: "Bàn phím cơ gaming thiết kế rút gọn layout Tenkeyless cắt bỏ phần phím số mở rộng không gian vẩy chuột chiến game FPS. Khung kim loại nhôm phay xước cứng cáp cùng công nghệ switch RX quang học phản hồi tốc độ ánh sáng.",
       Images: ["asus-rog-strix-scope-tkl.jpg"], Average_rating: 4.6, Total_reviews: 37, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
       Technical_specs: { Type: "Bàn phím cơ gaming cơ học rút gọn TKL", Switch: "Switch quang cơ độc quyền ROG RX Red quang học phản hồi nhanh", Backlight: "Hệ thống đèn Aura Sync RGB từng phím tùy biến sắc màu lung linh", Keycap: "Nhựa ABS phủ lớp nhám chống mài mòn bóng phím", Feature: "Phím Ctrl bên trái làm rộng gấp đôi chuẩn chống bấm trượt khi combat", Weight: "880g cứng cáp vỏ thép", Usage_Type: "Chiến game competitive phản hồi siêu tốc, Trang trí góc gaming", User_Segment: "Gamer FPS, Sinh viên đam mê cơ học bàn phím cơ", Performance_Level: "Gaming chuyên sâu", AI_Tag: "bàn-phím-cơ-rog, switch-quang-học, layout-tkl, phím-gaming" }
@@ -539,7 +539,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_056", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Cáp Sạc Anker PowerLine III USB-C to USB-C",
+      Product_id: "PRD_056", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Cáp sạc Anker PowerLine III USB-C to USB-C",
       Description: "Sợi dây cáp sạc truyền dữ liệu 'nồi đồng cối đá' được bọc lớp vỏ silicon siêu mềm mại chống rối dây đỉnh cao. Phần lõi cấu trúc được gia cố bằng sợi chống đạn chịu lực bẻ cong vặn xoắn bền bỉ lên tới hơn 25000 lần sạc.",
       Images: ["anker-powerline-3-white.jpg"], Average_rating: 4.7, Total_reviews: 410, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Interface: "Chuẩn kết nối hai đầu Type-C to Type-C", Length: "0.9 mét tiêu chuẩn chống rối", PowerMax: "Hỗ trợ tải dòng công suất sạc tối đa 60W chuẩn sạc nhanh PD", DataTransfer: "Tốc độ truyền dữ liệu file đạt 480 Mbps ổn định", Durability: "Chịu lực kéo uốn nắn lên đến 25.000 lần test phòng thí nghiệm", Material: "Lõi đồng nguyên chất gia cố, vỏ bọc silicon dẻo mềm mịn", Weight: "35g siêu bền", Usage_Type: "Dây cáp sạc nhanh cắm điện thoại, máy tính bảng iPad hằng ngày", User_Segment: "Tất cả mọi đối tượng người dùng sở hữu thiết bị cổng Type-C", Performance_Level: "Phổ thông siêu bền", AI_Tag: "cáp-sạc-anker, cáp-typec-to-typec, siêu-bền-chống-đứt, sạc-nhanh-60w" }
@@ -552,7 +552,7 @@ const productsData = [
   // ============================================================
   {
     product: {
-      Product_id: "PRD_028", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Razer DeathAdder V3 HyperSpeed",
+      Product_id: "PRD_028", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Chuột gaming Razer DeathAdder V3 HyperSpeed",
       Description: "Dòng chuột gaming không dây huyền thoại được tái sinh với trọng lượng siêu nhẹ chỉ 88g không đục lỗ vỏ thân máy. Cảm biến Focus X 26.000 DPI siêu chuẩn xác tuyệt đối kết hợp công nghệ không dây HyperSpeed không độ trễ tín hiệu.",
       Images: ["razer-deathadder-v3-black.jpg"], Average_rating: 4.7, Total_reviews: 93, Status: "on_sale", Discount: 15, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Sensor: "Mắt đọc quang học Razer Focus X 26K DPI siêu chuẩn", Switch: "Razer Optical Mouse Switches Gen-3 bền bỉ 100 triệu click chống double click", Battery: "90 giờ chơi liên tục chế độ HyperSpeed không dây", Connectivity: "Không dây không độ trễ Razer HyperSpeed Wireless 2.4GHz + Cáp rời", Buttons: "6 nút gán macro lập trình lệnh qua phần mềm Synapse", Weight: "88g Siêu nhẹ không lỗ vỏ", Usage_Type: "Chiến game FPS competitive chuyên sâu (Valorant, CS2), Esports", User_Segment: "Gamer bắn súng FPS chuyên nghiệp, Vận động viên Esports", Performance_Level: "Đỉnh cao chuột Gaming", AI_Tag: "chuột-gaming-razer, deathadder-v3, chuột-fps-siêu-nhẹ, không-dây-hyperspeed" }
@@ -561,7 +561,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_029", Category_id: "CAT_006", Brand_id: "BRD_014", Product_name: "HyperX Alloy Origins 65 Mechanical Keyboard",
+      Product_id: "PRD_029", Category_id: "CAT_006", Brand_id: "BRD_014", Product_name: "Bàn phím cơ HyperX Alloy Origins 65",
       Description: "Bàn phím cơ chơi game layout 65% nhỏ gọn tối giản giữ lại cụm phím điều hướng mũi tên thiết yếu. Khung vỏ chế tác nhôm nguyên khối đầm chắc chắn chống dịch chuyển phím cùng hệ thống dải đèn LED RGB rực rỡ per-key sắc nét.",
       Images: ["hyperx-alloy-origins-65.jpg"], Average_rating: 4.6, Total_reviews: 67, Status: "on_sale", Discount: 35, Is_Flash_Sale: true, Is_AI: false,
       Technical_specs: { Layout: "65% Gọn gàng (68 phím giữ cụm mũi tên điều hướng)", Switch: "Switch cơ học độc quyền HyperX Aqua gõ đanh nịnh tai phản hồi tốt", Backlight: "Đèn LED RGB chiếu sáng per-key rực rỡ với phần mềm NGENUITY", Body: "Vỏ nhôm nguyên khối chuẩn hàng không chịu lực đập gõ mạnh", Keycap: "Nhựa PBT double-shot siêu bền bỉ chống bóng mờ phím chữ", Connectivity: "Dây cáp kết nối rời chuẩn USB Type-C bọc vải dù chống đứt", Weight: "825g đầm chắc", Usage_Type: "Gõ phím chiến game buổi đêm, setup góc chơi game tối giản, gõ văn bản văn phòng", User_Segment: "Game thủ chuộng layout gọn, Lập trình viên thích phím cơ compact", Performance_Level: "Cao cấp cơ học", AI_Tag: "bàn-phím-cơ-hyperx, layout-65, switch-aqua-linear, nhôm-nguyên-khối" }
@@ -570,7 +570,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_030", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Razer Huntsman V3 Pro TKL",
+      Product_id: "PRD_030", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Bàn phím cơ Razer Huntsman V3 Pro TKL",
       Description: "Vũ khí tối thượng của các game thủ Esport thi đấu chuyên nghiệp. Trang bị dòng công nghệ switch quang học Analog thế hệ mới nhận diện thông minh độ sâu nhấn phím và tính năng Rapid Trigger reset phím siêu tốc đỉnh cao vẩy súng.",
       Images: ["razer-huntsman-v3-pro-tkl.jpg"], Average_rating: 4.8, Total_reviews: 41, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
       Technical_specs: { Layout: "Tenkeyless rút gọn (87 phím cắt bỏ numpad số phải)", Switch: "Razer Analog Optical Switches Gen-2 nhận diện lực nhấn nông sâu tùy chỉnh", Feature: "Tính năng Rapid Trigger phản hồi nhả phím lập tức chuyên trị game FPS", Control: "Núm xoay điều khiển âm lượng đa phương tiện bằng kim loại cao cấp", Backlight: "Hệ thống Razer Chroma RGB tỏa sáng rực rỡ đồng bộ game", Connectivity: "Dây cáp bọc vải dù Type-C tháo rời linh hoạt di chuyển", Weight: "920g cứng cáp chuyên nghiệp", Usage_Type: "Thi đấu game FPS competitive Valorant CS2 chuyên nghiệp, vẩy góc strafe súng", User_Segment: "Pro Player thi đấu giải đấu, Gamer chuyên sâu mong muốn thông số đỉnh", Performance_Level: "Flagship tối thượng bàn phím", AI_Tag: "bàn-phím-cơ-razer, huntsman-v3, công-nghệ-rapid-trigger, switch-quang-analog" }
@@ -588,7 +588,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_032", Category_id: "CAT_006", Brand_id: "BRD_013", Product_name: "Logitech G Pro X Superlight 2",
+      Product_id: "PRD_032", Category_id: "CAT_006", Brand_id: "BRD_013", Product_name: "Chuột gaming Logitech G Pro X Superlight 2",
       Description: "Chuột gaming không dây có trọng lượng siêu nhẹ kinh ngạc chỉ 60g chuẩn mực vàng của toàn bộ giới Pro Player bắn súng FPS thế giới. Trang bị mắt đọc HERO 2 thông minh và switch bấm hybrid cơ quang phản hồi không độ trễ.",
       Images: ["logitech-gpro-x-superlight2-white.jpg"], Average_rating: 4.9, Total_reviews: 118, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: true,
       Technical_specs: { Sensor: "Mắt đọc quang học tối tân HERO 2 độc quyền Logitech G", DPI: "Độ phân giải siêu nhạy lên tới 32000 DPI bám sát chuyển động tốt", Switch: "LIGHTFORCE Hybrid quang học cơ học click đanh sắc, phản hồi lập tức", Battery: "95 giờ sử dụng liên tục (Có công nghệ sạc không dây qua lót chuột Powerplay)", Connectivity: "Không dây độc quyền LIGHTSPEED 2.4GHz tốc độ phản hồi 2000Hz polling rate", Weight: "60g Siêu nhẹ vô địch", Usage_Type: "Vẩy chuột tâm súng FPS Valorant CS2 chính xác cao, đấu giải Esports", User_Segment: "Game thủ Hardcore chuyên nghiệp, Tuyển thủ FPS thi đấu chuyên nghiệp", Performance_Level: "Đỉnh cao chuột thi đấu", AI_Tag: "chuột-gaming-logitech, superlight-2, chuột-60g, không-dây-lightspeed" }
@@ -597,7 +597,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_033", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Razer Kishi V2 Pro Mobile Controller",
+      Product_id: "PRD_033", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Tay cầm Razer Kishi V2 Pro Mobile Controller",
       Description: "Tay cầm điều khiển gaming di động kết nối trực tiếp qua cổng cắm cứng USB-C loại bỏ hoàn toàn độ trễ truyền phát tín hiệu, nút bấm switch cơ học nảy tanh tách biến chiếc điện thoại thành máy chơi game cầm tay chuyên dụng.",
       Images: ["razer-kishi-v2-pro-black.jpg"], Average_rating: 4.5, Total_reviews: 55, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Tay cầm chơi game gắn điện thoại di động di động", Interface: "Kết nối cứng trực tiếp qua cổng cắm USB-C chống trễ tín hiệu hoàn toàn", Switch: "Nút bấm cơ học công nghệ Razer Mecha-Tactile và d-pad phản hồi tốt", Feature: "Hỗ trợ cổng sạc pass-through sạc ngược cho điện thoại khi chơi và jack 3.5mm", Compatibility: "Hỗ trợ toàn diện điện thoại Android và dòng iPhone 15/16 Series cổng C", Weight: "138g nhỏ gọn ôm tay", Usage_Type: "Chơi game giả lập PSP, Mobile game Genshin Impact, Cloud Gaming Xbox", User_Segment: "Gamer Mobile cày game mọi nơi, Tín đồ Cloud Gaming di động", Performance_Level: "Cao cấp phụ kiện mobile", AI_Tag: "tay-cầm-razer, kishi-v2-pro, tay-cầm-chống-trễ, điện-thoại-gaming" }
@@ -624,7 +624,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_059", Category_id: "CAT_006", Brand_id: "BRD_013", Product_name: "Logitech G502 X Plus Wireless Gaming Mouse",
+      Product_id: "PRD_059", Category_id: "CAT_006", Brand_id: "BRD_013", Product_name: "Chuột gaming Logitech G502 X Plus Wireless",
       Description: "Sự tái sinh hoàn hảo của dòng chuột chơi game bán chạy nhất thế giới. Form dáng công thái học cầm đầy đặn tay, nâng cấp hệ thống switch bấm lai hybrid quang cơ LIGHTFORCE bất tử không lo double click cùng dải LED RGB 8 vùng lộng lẫy.",
       Images: ["logitech-g502x-plus.jpg"], Average_rating: 4.8, Total_reviews: 104, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Sensor: "Mắt đọc quang học thế hệ mới HERO 25K bám sát hoàn hảo", DPI: "Dải DPI rộng tùy biến tự do từ 100 đến 25600 DPI siêu nhạy", Switch: "LIGHTFORCE Hybrid Quang-Cơ học phản hồi giòn giã sắc bén, tuổi thọ vô cực", Backlight: "Hệ thống đèn LED LIGHTSYNC RGB 8 vùng phát màu tùy biến động thông minh", Connectivity: "Không dây LIGHTSPEED cải tiến tốc độ phản hồi nhanh hơn 68% bản cũ", Buttons: "13 nút bấm chức năng có thể gán macro qua phần mềm G HUB chuyên sâu", Weight: "106g công thái học đầm tay", Usage_Type: "Chơi game thế giới mở RPG, game MOBA cần nhiều phím tắt gán lệnh macro nhanh", User_Segment: "Gamer MOBA LOL, Người dùng chuộng thiết kế cơ bắp nhiều nút bấm phụ", Performance_Level: "Premium Gaming chuột", AI_Tag: "chuột-gaming-logitech, g502x-plus, switch-hybrid-quang-cơ, không-dây-lightspeed" }
@@ -633,7 +633,7 @@ const productsData = [
   },
   {
     product: {
-      Product_id: "PRD_060", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Razer BlackShark V2 Pro 2024 Edition",
+      Product_id: "PRD_060", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Tai nghe gaming Razer BlackShark V2 Pro 2024",
       Description: "Chiếc tai nghe gaming không dây chuẩn mực cao cấp phục vụ các giải đấu Esports chuyên nghiệp bắn súng. Nổi bật với cụm Microphone thu âm dải siêu rộng HyperClear tháo rời truyền tải chất giọng đàm thoại rõ nét như studio.",
       Images: ["razer-blackshark-v2-pro-white.jpg"], Average_rating: 4.7, Total_reviews: 79, Status: "on_sale", Discount: 0, Is_Flash_Sale: false, Is_AI: false,
       Technical_specs: { Type: "Tai nghe Gaming chụp tai không dây Esport", Driver: "Màng loa cao cấp độc quyền Razer TriForce Titanium 50mm tách biệt âm sắc", Frequency: "12Hz - 28000Hz dải tần âm rộng lớn chi tiết", Sound: "Hỗ trợ giả lập âm thanh vòm không gian THX Spatial Audio định vị hướng", Battery: "Thời lượng pin khủng lên đến 70 giờ chơi game liên tục (Sạc Type-C nhanh)", Connectivity: "Không dây Razer HyperSpeed 2.4GHz không trễ + Bluetooth 5.2 linh hoạt", Microphone: "Siêu Micro băng thông siêu rộng HyperClear 9.9mm thu tiếng cực trong trẻo", Weight: "320g đệm tai vải dệt thoáng khí cách âm tốt", Usage_Type: "Đấu giải game bắn súng FPS, Đàm thoại chiến thuật Discord voice rõ mượt", User_Segment: "Gamer competitive chuyên sâu FPS, Tuyển thủ Esport chuyên nghiệp", Performance_Level: "Tiêu chuẩn giải đấu Esport", AI_Tag: "tai-nghe-gaming-razer, blackshark-v2-pro, micro-siêu-nét, tai-nghe-esport" }
