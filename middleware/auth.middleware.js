@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   try {
-    // Lấy token từ header
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -12,7 +11,6 @@ const authMiddleware = (req, res, next) => {
       });
     }
 
-    // Xác thực token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();

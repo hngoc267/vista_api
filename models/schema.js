@@ -1,15 +1,6 @@
-// ============================================================
-// VISTA — MongoDB Schema Definitions
-// Dựa theo ERD đã thiết kế
-// Công nghệ: MongoDB (Mongoose ODM cho Node.js)
-// ============================================================
-
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-// ============================================================
-// 1. USER — Người dùng
-// ============================================================
 const UserSchema = new Schema(
   {
     User_id: { type: String, required: true, unique: true },
@@ -22,18 +13,15 @@ const UserSchema = new Schema(
     Created_at: { type: Date, default: Date.now },
     Reset_otp: { type: String, default: null },
     Reset_otp_expires: { type: Date, default: null },
-    // Thêm trường này vào Mongoose Schema của bạn
   Total_spent: {
   type: Number,
-  default: 0 // Rất quan trọng: User mới tạo tài khoản thì mặc định điểm là 0
+  default: 0 
 }
   },
   { collection: "User" }
 );
 
-// ============================================================
-// 2. ADDRESS — Địa chỉ giao hàng
-// ============================================================
+
 const AddressSchema = new Schema(
   {
     Address_id: { type: String, required: true, unique: true },
@@ -50,9 +38,7 @@ const AddressSchema = new Schema(
   { collection: "Address" }
 );
 
-// ============================================================
-// 3. CATEGORY — Danh mục sản phẩm
-// ============================================================
+
 const CategorySchema = new Schema(
   {
     Category_id: { type: String, required: true, unique: true },
@@ -62,9 +48,7 @@ const CategorySchema = new Schema(
   { collection: "Category" }
 );
 
-// ============================================================
-// 4. BRAND — Thương hiệu
-// ============================================================
+
 const BrandSchema = new Schema(
   {
     Brand_id: { type: String, required: true, unique: true },
@@ -75,9 +59,7 @@ const BrandSchema = new Schema(
   { collection: "Brand" }
 );
 
-// ============================================================
-// 5. PRODUCT — Sản phẩm
-// ============================================================
+
 const ProductSchema = new Schema(
   {
     Product_id: { type: String, required: true, unique: true },
@@ -101,9 +83,7 @@ const ProductSchema = new Schema(
   { collection: "Product" }
 );
 
-// ============================================================
-// 6. PRODUCT_VARIANT — Phiên bản sản phẩm
-// ============================================================
+
 const ProductVariantSchema = new Schema(
   {
     Product_variant_id: { type: String, required: true, unique: true },
@@ -121,9 +101,7 @@ const ProductVariantSchema = new Schema(
   { collection: "Product_variant" }
 );
 
-// ============================================================
-// 7. CART — Giỏ hàng
-// ============================================================
+
 const CartSchema = new Schema(
   {
     Cart_id: { type: String, required: true, unique: true },
@@ -134,9 +112,7 @@ const CartSchema = new Schema(
   { collection: "Cart" }
 );
 
-// ============================================================
-// 8. CART_ITEM — Chi tiết giỏ hàng
-// ============================================================
+
 const CartItemSchema = new Schema(
   {
     Cart_item_id: { type: String, required: true, unique: true },
@@ -148,9 +124,7 @@ const CartItemSchema = new Schema(
   { collection: "Cart_item" }
 );
 
-// ============================================================
-// 9. VOUCHER — Mã giảm giá
-// ============================================================
+
 const VoucherSchema = new mongoose.Schema(
   {
     code: { type: String, required: true, unique: true },
@@ -176,7 +150,7 @@ const VoucherSchema = new mongoose.Schema(
     statusText: { type: String, default: "" },
     Required_tier: {
   type: Number,
-  default: 0 // Mặc định là 0 (Hạng Bronze) để ai cũng dùng được
+  default: 0 
 }
   },
   {
@@ -185,9 +159,7 @@ const VoucherSchema = new mongoose.Schema(
   }
 );
 
-// ============================================================
-// 10. ORDER — Đơn hàng
-// ============================================================
+
 const OrderSchema = new Schema(
   {
     Order_id: { type: String, required: true, unique: true },
@@ -227,9 +199,7 @@ const OrderSchema = new Schema(
   { collection: "Order" }
 );
 
-// ============================================================
-// 11. ORDER_DETAIL — Chi tiết đơn hàng
-// ============================================================
+
 const OrderDetailSchema = new Schema(
   {
     Order_detail_id: { type: String, required: true, unique: true },
@@ -245,9 +215,7 @@ const OrderDetailSchema = new Schema(
   { collection: "Order_detail" }
 );
 
-// ============================================================
-// 12. PAYMENT — Thanh toán
-// ============================================================
+
 const PaymentSchema = new Schema(
   {
     Payment_id: { type: String, required: true, unique: true },
@@ -270,9 +238,7 @@ const PaymentSchema = new Schema(
   { collection: "Payment" }
 );
 
-// ============================================================
-// 13. DELIVERY — Vận chuyển
-// ============================================================
+
 const DeliverySchema = new Schema(
   {
     Delivery_id: { type: String, required: true, unique: true },
@@ -293,9 +259,7 @@ const DeliverySchema = new Schema(
   { collection: "Delivery" }
 );
 
-// ============================================================
-// 14. RETURN_ORDER — Yêu cầu trả hàng / hoàn trả
-// ============================================================
+
 const ReturnOrderSchema = new Schema(
   {
     Return_order_id: { type: String, required: true, unique: true },
@@ -321,9 +285,7 @@ const ReturnOrderSchema = new Schema(
   { collection: "Return_order" }
 );
 
-// ============================================================
-// 15. REVIEW — Đánh giá sản phẩm
-// ============================================================
+
 const ReviewSchema = new Schema(
   {
     Review_id: { type: String, required: true, unique: true },
@@ -336,9 +298,7 @@ const ReviewSchema = new Schema(
   { collection: "Review" }
 );
 
-// ============================================================
-// 16. SESSION — Phiên trò chuyện AI
-// ============================================================
+
 const SessionSchema = new Schema(
   {
     Session_id: { type: String, required: true, unique: true },
@@ -350,9 +310,7 @@ const SessionSchema = new Schema(
   { collection: "Session" }
 );
 
-// ============================================================
-// 17. MESSAGE — Chi tiết tin nhắn
-// ============================================================
+
 const MessageSchema = new Schema(
   {
     Message_id: { type: String, required: true, unique: true },
@@ -370,9 +328,7 @@ const MessageSchema = new Schema(
   { collection: "Message" }
 );
 
-// ============================================================
-// 18. AI_COMPARISON — Phân tích so sánh AI
-// ============================================================
+
 const AIComparisonSchema = new Schema(
   {
     AI_comparison_id: { type: String, required: true, unique: true },
@@ -385,9 +341,7 @@ const AIComparisonSchema = new Schema(
   { collection: "AI_comparison" }
 );
 
-// ============================================================
-// EXPORT TẤT CẢ MODELS
-// ============================================================
+
 module.exports = {
   User: mongoose.model("User", UserSchema),
   Address: mongoose.model("Address", AddressSchema),

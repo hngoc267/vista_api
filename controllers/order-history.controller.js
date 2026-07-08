@@ -432,7 +432,7 @@ const getOrderHistory = async (req, res) => {
         Voucher_code: order.Voucher_code || '',
         Voucher_title: order.Voucher_title || '',
         
-        // --- THÊM CÁC TRƯỜNG DỮ LIỆU ĐỂ HIỂN THỊ LÊN MODAL CHI TIẾT ---
+
         Total_items_price: order.Total_items_price || 0,
         Discount_amount: order.Discount_amount || 0,
         Voucher_discount_amount: order.Voucher_discount_amount || 0,
@@ -454,7 +454,7 @@ const getOrderHistory = async (req, res) => {
         Payment_type: paymentType,
         Payment_status: paymentStatus,
         Order_notes: order.Order_notes || '',
-        // --------------------------------------------------------------
+
         
         Items: formattedItems
       };
@@ -548,7 +548,7 @@ const markOrderReceived = async (req, res) => {
       { Order_id: orderId },
       { $set: { Status: 'delivered' } }
     );
-    // THÊM MỚI: CỘNG ĐIỂM KHI ĐÃ NHẬN HÀNG
+
     const amountToAdd = Number(order.Total_amount) || 0;
     const userId = order.User_id;
 
@@ -702,8 +702,6 @@ const cancelOrder = async (req, res) => {
 };
 
 
-// Nhớ đảm bảo bạn đã có import model User ở đầu file nhé
-// Ví dụ: const { Order, Payment, Delivery, User } = require('../models/schema');
 
 const markOrderReviewed = async (req, res) => {
   try {
@@ -722,7 +720,7 @@ const markOrderReviewed = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Đơn hàng này đã được đánh giá trước đó.' });
     }
 
-    // --- CHỈ ĐỔI TRẠNG THÁI REVIEW - KHÔNG CỘNG ĐIỂM Ở ĐÂY NỮA ---
+
     await Order.updateOne(
       { Order_id: orderId },
       { $set: { Review_status: 'reviewed' } }
@@ -740,10 +738,10 @@ const markOrderReviewed = async (req, res) => {
     });
   }
 };
-// Cập nhật lại module.exports ở cuối file
+
 module.exports = {
   getOrderHistory,
   markOrderReceived,
   cancelOrder,
-  markOrderReviewed // <--- QUÊN EXPORT SẼ BỊ LỖI TIẾP NHÉ
+  markOrderReviewed 
 };

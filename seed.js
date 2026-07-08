@@ -1,8 +1,3 @@
-// ============================================================
-// VISTA — seed.js
-// Dữ liệu mẫu: Brands, Categories, Products, Variants, Users, Vouchers
-// Chạy: node seed.js
-// ============================================================
 const dotenv = require("dotenv");
 dotenv.config();
 const mongoose = require("mongoose");
@@ -17,9 +12,7 @@ const Cart = models.Cart;
 const Voucher = models.Voucher;
 
 const connectDB = require("./config/db");
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
+
 const uid = (prefix, n) => `${prefix}_${String(n).padStart(3, "0")}`;
 
 // ─────────────────────────────────────────────

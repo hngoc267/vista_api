@@ -127,7 +127,7 @@
     });
   }
 
-  // 1. LẤY TẤT CẢ SẢN PHẨM
+
   exports.getAllProducts = async (req, res) => {
     try {
       const { category, brand, minPrice, maxPrice, search, page = 1, limit = 12, sort = "newest", isAI, isNew, isPromo } = req.query;
@@ -144,7 +144,7 @@
         }
       }
       
-      // LOGIC CHUẨN:
+
       if (req.query.isFlashSale === 'true') {
           filter.Is_Flash_Sale = true;
       } else if (isPromo === 'true') {
@@ -153,16 +153,15 @@
           filter.Is_AI = { $ne: true };
       } else if (isAI === 'true') {
           filter.Is_AI = true;
-          // Có thể thêm filter.Discount = 0 nếu sếp muốn AI không được giảm giá
       } else if (isNew === 'true') {
-          filter.Discount = 0;                  // BẮT BUỘC: Hàng mới không được có giảm giá
+          filter.Discount = 0;                  
           filter.Is_Flash_Sale = { $ne: true };
           filter.Is_AI = { $ne: true };
       }
       
       let products = await Product.find(filter).lean();
 
-      // TÍNH GIÁ CHUẨN 100% TỪ DATABASE
+
       let productsWithPrice = await Promise.all(
         products.map(async (product) => {
           const variants = await Product_variant.find({
@@ -184,7 +183,7 @@
         })
       );
 
-      // LỌC VÀ SẮP XẾP GIÁ...
+
       if (minPrice || maxPrice) {
         productsWithPrice = productsWithPrice.filter((p) => {
           if (minPrice && p.final_price < Number(minPrice)) return false;
@@ -217,7 +216,7 @@
     }
   };
 
-  // 2. LẤY CHI TIẾT 1 SẢN PHẨM
+
   exports.getProductById = async (req, res) => {
     try {
       const product = await Product.findOne({ Product_id: req.params.id }).lean();
@@ -253,13 +252,13 @@
     }
   };
 
-  // 3. SẢN PHẨM NỔI BẬT (Đã chuẩn hóa logic)
+
   exports.getFeaturedProducts = async (req, res) => {
     try {
       const products = await Product.find({
-        Status: "on_sale" // Bảo đảm sản phẩm phải đang mở bán
+        Status: "on_sale" 
       })
-      .sort({ Average_rating: -1 }) // Xếp theo đánh giá cao nhất đổ xuống
+      .sort({ Average_rating: -1 }) 
       .limit(8)
       .lean();
 
@@ -285,7 +284,7 @@
     }
   };
 
-  // 4. FLASH SALE
+
   exports.getFlashSaleProducts = async (req, res) => {
     try {
       const products = await Product.find({ Status: "on_sale", Is_Flash_Sale: true })
@@ -304,7 +303,7 @@
     }
   };
 
-  // 5. VISTA AI GỢI Ý (Đã fix lỗi hiển thị giá)
+
   exports.getAISuggestedProducts = async (req, res) => {
     try {
       const products = await Product.find({
@@ -341,7 +340,7 @@
       });
     }
   };
-  // 6. LẤY TẤT CẢ DANH MỤC
+
   exports.getAllCategories = async (req, res) => {
     try {
       const categories = await Category.find().lean();
@@ -351,7 +350,7 @@
     }
   };
 
-  // 7. SẢN PHẨM LIÊN QUAN
+
   exports.getRelatedProducts = async (req, res) => {
     try {
       const product = await Product.findOne({ Product_id: req.params.id }).lean();
@@ -370,7 +369,7 @@
     }
   };
 
-  // 8. LẤY THEO DANH MỤC
+
   exports.getProductsByCategory = async (req, res) => {
     try {
       const products = await Product.find({ Category_id: req.params.categoryId, Status: "on_sale" }).limit(4).lean();
@@ -386,7 +385,7 @@
     }
   };
 
-// 9. SO SÁNH SẢN PHẨM (LẤY NHIỀU VARIANT)
+
 exports.compareProducts = async (req, res) => {
   try {
     const { variantIds } = req.query;
@@ -398,7 +397,7 @@ exports.compareProducts = async (req, res) => {
     const results = [];
 
     for (const variantId of ids) {
-      // Tìm variant
+      
       const variant = await Product_variant.findOne({ 
         Product_variant_id: variantId,
         Status: 'active'
@@ -406,7 +405,7 @@ exports.compareProducts = async (req, res) => {
 
       if (!variant) continue;
 
-      // Tìm product cha
+      
       const product = await Product.findOne({ 
         Product_id: variant.Product_id,
         Status: 'on_sale'
@@ -414,14 +413,14 @@ exports.compareProducts = async (req, res) => {
 
       if (!product) continue;
 
-      // Tìm category và brand
+      
       const category = await Category.findOne({ Category_id: product.Category_id }).lean();
       const brand = await Brand.findOne({ Brand_id: product.Brand_id }).lean();
 
       results.push({
         ...product,
         selectedVariantId: variantId,
-        variants: [variant], // Gửi kèm variant để dễ lấy giá
+        variants: [variant], 
         category: category,
         brand: brand
       });
@@ -432,7 +431,7 @@ exports.compareProducts = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-  // 10. SMART SEARCH — Tìm kiếm thông minh bằng AI (Đã sửa lỗi lệch giá do Discount khuyến mãi & Thêm thông báo khi rỗng)
+
   exports.smartSearch = async (req, res) => {
     try {
       const { query } = req.body;
@@ -470,7 +469,7 @@ exports.compareProducts = async (req, res) => {
       }
       if (!query) return res.status(400).json({ success: false, message: "Thiếu query" });
   
-      // BƯỚC 0: Tự detect brand từ query — không phụ thuộc AI để tăng độ chính xác
+
       const brandList = [
         "Apple", "Samsung", "Xiaomi", "ASUS", "HP",
         "Dell", "Lenovo", "Acer", "Sony", "JBL",
@@ -481,7 +480,7 @@ exports.compareProducts = async (req, res) => {
       );
       console.log("Detected brand from query:", detectedBrand || "none");
   
-      // BƯỚC 1: Gọi Groq AI phân tích intent (Hỗ trợ lọc khoảng giá minPrice và maxPrice chính xác)
+
       const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { 
@@ -490,9 +489,9 @@ exports.compareProducts = async (req, res) => {
         },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
-          response_format: { type: "json_object" }, // Bắt buộc trả về JSON
+          response_format: { type: "json_object" }, 
           max_tokens: 256,
-          temperature: 0.1, // Giảm tối đa sự sáng tạo để tăng tính chính xác logic
+          temperature: 0.1, 
           messages: [{
             role: "user",
             content: `Bạn là một trợ lý AI phân tích ý định mua sắm đồ công nghệ. Hãy phân tích yêu cầu của người dùng và trả về một JSON object duy nhất.
@@ -528,14 +527,14 @@ exports.compareProducts = async (req, res) => {
       const raw = groqData.choices[0].message.content.trim();
       const intent = JSON.parse(raw);
       
-      // Gán brand từ detection thủ công vào intent
+
       intent.brand = detectedBrand || null;
-      // Detect cross-category keywords (xuất hiện ở cả CAT_005 và CAT_006)
+
       const crossCategoryTypes = ['chuột', 'bàn phím', 'tai nghe', 'loa', 'microphone', 'tay cầm'];
       const crossMatch = crossCategoryTypes.find(t => query.toLowerCase().includes(t));
 
       if (crossMatch) {
-        // Bỏ qua category, chỉ filter theo tên sản phẩm trên toàn DB
+
         const crossFilter = { Status: "on_sale", Product_name: { $regex: crossMatch, $options: 'i' } };
         let crossProducts = await Product.find(crossFilter).lean();
         
@@ -562,10 +561,10 @@ exports.compareProducts = async (req, res) => {
       }
       console.log("Intent final phân tích bởi AI:", intent);
   
-      // BƯỚC 2: Build filter chính xác
+
       const filter = { Status: "on_sale" };
   
-      // 1. Áp dụng filter Hãng (Brand) nếu tìm thấy
+
       let brandNameApplied = null;
       if (intent.brand) {
         const brandDoc = await Brand.findOne({
@@ -581,7 +580,7 @@ exports.compareProducts = async (req, res) => {
         }
       }
   
-      // 2. Áp dụng filter Danh mục (Category) nếu tìm thấy
+
       let categoryNameApplied = null;
       if (intent.category && intent.category !== "null") {
         const cat = await Category.findOne({
@@ -594,14 +593,14 @@ exports.compareProducts = async (req, res) => {
         }
       }
   
-      // 3. Chuẩn hóa keyword
+
       let cleanedKeyword =
         intent.keyword &&
         intent.keyword !== "null"
           ? intent.keyword.trim()
           : null;
 
-      // Backup: nếu AI lỡ trả kèm tên hãng thì loại bỏ
+
       if (cleanedKeyword && intent.brand) {
         cleanedKeyword = cleanedKeyword.replace(
           new RegExp(`\\b${intent.brand}\\b`, "ig"),
@@ -628,7 +627,7 @@ exports.compareProducts = async (req, res) => {
           cleanedKeyword.toLowerCase().includes(kw)
         );
 
-      // Áp dụng filter Product_name
+
       if (
         cleanedKeyword &&
         !containsOnlySemantic
@@ -661,7 +660,7 @@ exports.compareProducts = async (req, res) => {
         containsOnlySemantic &&
         !filter.Category_id
       ) {
-        // Không có category → tìm theo tên sản phẩm trên toàn bộ DB
+
         const accessoryTypes = ['chuột', 'bàn phím', 'tai nghe', 'loa', 'sạc', 'hub', 'cáp', 'màn hình', 'tay cầm', 'microphone'];
         const matchedType = accessoryTypes.find(t => cleanedKeyword?.toLowerCase().includes(t));
         if (matchedType) {
@@ -691,7 +690,7 @@ exports.compareProducts = async (req, res) => {
 
       }
       let products = await Product.find(filter).lean();
-      // Thực hiện truy vấn danh sách sản phẩm thô từ Database
+
       if (intent.priority === "performance") {
         products.sort((a, b) => {
           const scoreA =
@@ -708,23 +707,23 @@ exports.compareProducts = async (req, res) => {
       console.log("Mongoose Filter ứng dụng:", JSON.stringify(filter));
       console.log("Số lượng sản phẩm tìm thấy sơ bộ:", products.length);
   
-      // BƯỚC 3: Gán giá gốc thấp nhất từ các biến thể (variants) & TÍNH TOÁN GIÁ BÁN THỰC TẾ sau khi trừ Discount
+
       let results = await Promise.all(products.map(async (p) => {
         const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
         const originalPrice = variant?.Price || 0;
         
-        // Tính toán giá thực tế sau khi giảm giá để làm căn cứ so sánh chính xác với khoảng giá người dùng yêu cầu
+
         const discountPercent = p.Discount || 0;
         const finalPrice = originalPrice - (originalPrice * discountPercent / 100);
 
         return { 
           ...p, 
-          min_price: originalPrice, // Giữ nguyên giá gốc để Frontend tiếp tục tính toán render, không gây lỗi lặp discount
-          final_price: finalPrice   // Thuộc tính mới phục vụ việc lọc so sánh ở Backend
+          min_price: originalPrice, 
+          final_price: finalPrice   
         };
       }));
   
-      // BƯỚC 4: Lọc giá linh hoạt (So sánh chuẩn dựa trên GIÁ THỰC TẾ final_price)
+
       if (intent.minPrice) {
         results = results.filter(p => p.final_price >= intent.minPrice);
         console.log("Số lượng sản phẩm sau khi lọc giá tối thiểu thực tế (>= " + intent.minPrice + "):", results.length);
@@ -734,10 +733,10 @@ exports.compareProducts = async (req, res) => {
         console.log("Số lượng sản phẩm sau khi lọc giá tối đa thực tế (<= " + intent.maxPrice + "):", results.length);
       }
   
-      // BƯỚC 5: Sắp xếp theo mức độ đánh giá (Rating) cao giảm dần
+
       results.sort((a, b) => (b.Average_rating || 0) - (a.Average_rating || 0));
   
-      // BƯỚC 6: Gán badge nhãn AI Đề xuất
+
       results = results.map((p) => {
         const {
           final_price,
@@ -748,21 +747,21 @@ exports.compareProducts = async (req, res) => {
         return {
           ...cleanProduct,
 
-          // giá frontend dùng
+
           min_price: final_price,
 
-          // giữ lại để hiển thị gạch ngang
+
           original_price: min_price,
 
           aiTag: "✦ AI đề xuất"
         };
       });
   
-      // Giới hạn số lượng kết quả hiển thị phù hợp với giao diện frontend
+
       const resultLimit = intent.brand ? 4 : intent.category ? 6 : 4;
       const finalData = results.slice(0, resultLimit);
 
-      // BƯỚC 7: Trả về thông báo thông minh khi không có kết quả phù hợp
+
       let responseMessage = "Thành công";
       if (finalData.length === 0) {
         const parts = [];

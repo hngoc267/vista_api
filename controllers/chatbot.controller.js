@@ -1,17 +1,15 @@
 const { Session, Message, Product, Product_variant, Category, Voucher } = require("../models/schema");
 
-// ─────────────────────────────────────────────
-// HELPER: sinh ID tăng dần theo convention dự án
-// ─────────────────────────────────────────────
+
 async function genSessionId() {
-  // Tìm session có Session_id lớn nhất (sắp xếp giảm dần -1)
+
   const lastSession = await Session.findOne().sort({ Session_id: -1 }).lean();
   
   if (!lastSession || !lastSession.Session_id) {
-    return "SES_001"; // Nếu DB chưa có gì, bắt đầu từ 001
+    return "SES_001"; 
   }
 
-  // Tách lấy phần số (Ví dụ: "SES_007" -> "007" -> 7)
+
   const lastNum = parseInt(lastSession.Session_id.replace("SES_", ""), 10);
   const nextNum = lastNum + 1;
 
@@ -31,10 +29,7 @@ async function genMessageId() {
   return `MSG_${String(nextNum).padStart(3, "0")}`;
 }
 
-// ─────────────────────────────────────────────
-// 1. TẠO SESSION MỚI
-// POST /api/chatbot/sessions
-// ─────────────────────────────────────────────
+
 exports.createSession = async (req, res) => {
   try {
     const Session_id = await genSessionId();
@@ -51,10 +46,7 @@ exports.createSession = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
-// 2. LẤY DANH SÁCH SESSION CỦA USER (sidebar)
-// GET /api/chatbot/sessions
-// ─────────────────────────────────────────────
+
 exports.getSessions = async (req, res) => {
   try {
     const sessions = await Session.find({ User_id: req.user.User_id })
@@ -66,15 +58,12 @@ exports.getSessions = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
-// 3. LẤY TIN NHẮN CỦA 1 SESSION
-// GET /api/chatbot/sessions/:sessionId/messages
-// ─────────────────────────────────────────────
+
 exports.getSessionMessages = async (req, res) => {
   try {
     const { sessionId } = req.params;
 
-    // Bảo mật: chỉ lấy nếu session thuộc về user đang đăng nhập
+
     const session = await Session.findOne({
       Session_id: sessionId,
       User_id: req.user.User_id,
@@ -93,11 +82,7 @@ exports.getSessionMessages = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
-// 4. GỬI TIN NHẮN & NHẬN PHẢN HỒI AI
-// POST /api/chatbot/sessions/:sessionId/messages
-// Body: { content: "Tìm laptop dưới 20 triệu" }
-// ─────────────────────────────────────────────
+
 exports.sendMessage = async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -107,7 +92,7 @@ exports.sendMessage = async (req, res) => {
       return res.status(400).json({ success: false, message: "Nội dung tin nhắn không được để trống" });
     }
 
-    // Bảo mật: kiểm tra session thuộc user
+
     const session = await Session.findOne({
       Session_id: sessionId,
       User_id: req.user.User_id,
@@ -116,7 +101,6 @@ exports.sendMessage = async (req, res) => {
       return res.status(404).json({ success: false, message: "Không tìm thấy cuộc trò chuyện" });
     }
 
-    // Lưu tin nhắn của user xuống DB
     const userMsgId = await genMessageId();
     await Message.create({
       Message_id: userMsgId,
@@ -126,13 +110,12 @@ exports.sendMessage = async (req, res) => {
       Created_at: new Date(),
     });
 
-    // Tự đặt tiêu đề session theo câu hỏi đầu tiên
     if (session.Title === "Cuộc trò chuyện mới") {
       const shortTitle = content.length > 50 ? content.slice(0, 50) + "..." : content;
       session.Title = shortTitle;
     }
 
-    // Lấy lịch sử hội thoại gần nhất (tối đa 10 tin nhắn) để đưa vào context Groq
+
     const recentMessages = await Message.find({ Session_id: sessionId })
       .sort({ Created_at: -1 })
       .limit(10)
@@ -142,8 +125,7 @@ exports.sendMessage = async (req, res) => {
       content: m.Content,
     }));
 
-    // ── Gọi Groq ─────────────────────────────
-    // ── GROQ LẦN 1: Chỉ trích intent ────────────
+
     const intentPrompt = `Phân tích yêu cầu sau và trả về JSON duy nhất, không giải thích:
     Yêu cầu: "${content}"
 
@@ -174,7 +156,7 @@ exports.sendMessage = async (req, res) => {
     let intent;
     try {
       intent = JSON.parse(intentRaw);
-      // Nếu Groq trả về format lạ (không có hasProducts) thì reset
+
       if (!('hasProducts' in intent)) {
         intent = { category: null, maxPrice: null, hasProducts: false, suggestions: [] };
       }
@@ -183,7 +165,7 @@ exports.sendMessage = async (req, res) => {
     }
     console.log("Intent:", JSON.stringify(intent, null, 2));
 
-    // ── QUERY DB ─────────────────────────────────
+
     let products = [];
     let voucherResults = [];
     const voucherKeywords = ['voucher', 'mã giảm giá', 'mã khuyến mãi', 'coupon', 'chương trình ưu đãi'];
@@ -265,11 +247,11 @@ exports.sendMessage = async (req, res) => {
         matchScore: Math.max(96 - i * 4, 75),
       }));
     }
-    // ── GROQ LẦN 2: Viết reply dựa trên sản phẩm thật ──
+
     let finalReply = overrideReply;
 
     if (!overrideReply) {
-      // Chuẩn bị context sản phẩm thật để đưa vào prompt
+
       const productContext = products.length > 0
         ? `Danh sách sản phẩm THẬT đang bán tại VISTA:\n` +
           products.map((p, i) =>
@@ -277,7 +259,7 @@ exports.sendMessage = async (req, res) => {
           ).join("\n")
         : "Không có sản phẩm cụ thể nào cần đề cập.";
 
-      // Lấy lịch sử chat để Groq có context
+
       const historyForGroq2 = recentMessages.map(m => ({
         role: m.Sender_type === "user" ? "user" : "assistant",
         content: m.Content,
@@ -318,7 +300,6 @@ exports.sendMessage = async (req, res) => {
 
     console.log("Final reply:", finalReply);
 
-    // Lưu tin nhắn AI (chỉ lưu phần reply text, không lưu JSON products)
     const aiMsgId = await genMessageId();
     const aiMessage = await Message.create({
       Message_id: aiMsgId,
@@ -330,7 +311,6 @@ exports.sendMessage = async (req, res) => {
       Created_at: new Date(),
     });
 
-    // Cập nhật Updated_at + Title của session
     session.Updated_at = new Date();
     await session.save();
 
@@ -349,10 +329,7 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
-// 5. XÓA SESSION
-// DELETE /api/chatbot/sessions/:sessionId
-// ─────────────────────────────────────────────
+
 exports.deleteSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -365,7 +342,6 @@ exports.deleteSession = async (req, res) => {
       return res.status(404).json({ success: false, message: "Không tìm thấy cuộc trò chuyện" });
     }
 
-    // Xóa toàn bộ tin nhắn trong session trước
     await Message.deleteMany({ Session_id: sessionId });
     await Session.deleteOne({ Session_id: sessionId });
 
