@@ -15,9 +15,7 @@ const connectDB = require("./config/db");
 
 const uid = (prefix, n) => `${prefix}_${String(n).padStart(3, "0")}`;
 
-// ─────────────────────────────────────────────
 // 1. CATEGORIES
-// ─────────────────────────────────────────────
 const categoriesData = [
   { Category_id: "CAT_001", Category_name: "Laptop",             Description: "Máy tính xách tay các loại" },
   { Category_id: "CAT_002", Category_name: "Smartphone",         Description: "Điện thoại thông minh" },
@@ -27,9 +25,7 @@ const categoriesData = [
   { Category_id: "CAT_006", Category_name: "Thiết bị gaming",    Description: "Chuột gaming, bàn phím cơ, màn hình gaming, tay cầm" },
 ];
 
-// ─────────────────────────────────────────────
 // 2. BRANDS
-// ─────────────────────────────────────────────
 const brandsData = [
   // Laptop
   { Brand_id: "BRD_001", Brand_name: "Apple",    Origin_country: "Mỹ",    Description: "Thương hiệu công nghệ cao cấp của Mỹ" },
@@ -53,14 +49,10 @@ const brandsData = [
   { Brand_id: "BRD_016", Brand_name: "Anker",    Origin_country: "Trung Quốc", Description: "Phụ kiện sạc và kết nối" },
 ];
 
-// ─────────────────────────────────────────────
 // 3. PRODUCTS + VARIANTS
-// ─────────────────────────────────────────────
 
 const productsData = [
-  // ============================================================
   // LAPTOP (CAT_001) - 10 sản phẩm
-  // ============================================================
   {
     product: {
       Product_id: "PRD_001", Category_id: "CAT_001", Brand_id: "BRD_001", Product_name: "Apple MacBook Air M3 13 inch 2024",
@@ -161,9 +153,8 @@ const productsData = [
     variants: [{ Product_variant_id: "VAR_087", Variant_name: "8GB / 512GB - Arctic Grey", Attributes: { Color: "Arctic Grey", RAM: "8GB", Storage: "512GB" }, Price: 12490000, Stock_quantity: 35 }]
   },
 
-  // ============================================================
+
   // SMARTPHONE (CAT_002) - 10 sản phẩm
-  // ============================================================
   {
     product: {
       Product_id: "PRD_009", Category_id: "CAT_002", Brand_id: "BRD_001", Product_name: "Apple iPhone 16 Pro Max",
@@ -258,9 +249,8 @@ const productsData = [
     variants: [{ Product_variant_id: "VAR_091", Variant_name: "8GB / 128GB - Midnight Black", Attributes: { Color: "Midnight Black", RAM: "8GB", Storage: "128GB" }, Price: 5990000, Stock_quantity: 60 }]
   },
 
-  // ============================================================
+
   // TABLET (CAT_003) - 10 sản phẩm
-  // ============================================================
   {
     product: {
       Product_id: "PRD_015", Category_id: "CAT_003", Brand_id: "BRD_001", Product_name: "Apple iPad Pro M4 13 inch 2024",
@@ -352,9 +342,8 @@ const productsData = [
     variants: [{ Product_variant_id: "VAR_097", Variant_name: "6GB / 128GB Wi-Fi - Mint Green", Attributes: { Color: "Mint Green", RAM: "6GB", Storage: "128GB", Connectivity: "Wi-Fi" }, Price: 9990000, Stock_quantity: 25 }]
   },
 
-  // ============================================================
+
   // THIẾT BỊ ÂM THANH (CAT_004) - 10 sản phẩm
-  // ============================================================
   {
     product: {
       Product_id: "PRD_019", Category_id: "CAT_004", Brand_id: "BRD_012", Product_name: "Tai nghe chụp tai Sony WH-1000XM5",
@@ -446,9 +435,8 @@ const productsData = [
     variants: [{ Product_variant_id: "VAR_102", Variant_name: "Matte Black", Attributes: { Color: "Black" }, Price: 1990000, Stock_quantity: 35 }]
   },
 
-  // ============================================================
+
   // PHỤ KIỆN CÔNG NGHỆ (CAT_005) - 10 sản phẩm
-  // ============================================================
   {
     product: {
       Product_id: "PRD_024", Category_id: "CAT_005", Brand_id: "BRD_016", Product_name: "Sạc dự phòng Anker 737 Power Bank 24000mAh",
@@ -540,9 +528,8 @@ const productsData = [
     variants: [{ Product_variant_id: "VAR_108", Variant_name: "PowerLine III White 60W", Attributes: { Color: "White", Length: "0.9m" }, Price: 150000, Stock_quantity: 100 }]
   },
 
-  // ============================================================
+
   // THIẾT BỊ GAMING (CAT_006) - 10 sản phẩm
-  // ============================================================
   {
     product: {
       Product_id: "PRD_028", Category_id: "CAT_006", Brand_id: "BRD_015", Product_name: "Chuột gaming Razer DeathAdder V3 HyperSpeed",
@@ -635,9 +622,8 @@ const productsData = [
   }
 ];
 
-// ─────────────────────────────────────────────
+
 // 4. USERS MẪU
-// ─────────────────────────────────────────────
 const bcrypt = require("bcryptjs");
 
 const usersData = async () => {
@@ -655,9 +641,8 @@ const usersData = async () => {
   ];
 };
 
-// ─────────────────────────────────────────────
+
 // 5. VOUCHERS MẪU
-// ─────────────────────────────────────────────
 const vouchersData = [
   {
     code: 'VISTA10',
@@ -666,7 +651,7 @@ const vouchersData = [
     type: 'percent',
     category: 'discount',
     status: 'expiring',
-    expiry: '20/06/2026', // Đã sửa thành expiry
+    expiry: '20/06/2026', 
     description: 'Giảm 10% toàn đơn hàng',
     benefits: ['Giảm 10% giá trị đơn hàng.', 'Giảm tối đa 500.000đ.'],
     conditions: ['Đơn hàng từ 5.000.000đ.', 'Áp dụng cho tất cả sản phẩm trên hệ thống.'],
@@ -681,7 +666,7 @@ const vouchersData = [
     type: 'shipping',
     category: 'freeship',
     status: 'expiring',
-    expiry: '20/06/2026', // Đã sửa thành expiry
+    expiry: '20/06/2026', 
     description: 'Giảm 30.000đ phí vận chuyển',
     benefits: ['Giảm trực tiếp 30.000đ phí vận chuyển.', 'Áp dụng khi thanh toán đơn hàng hợp lệ.'],
     conditions: ['Đơn hàng từ 2.000.000đ.', 'Áp dụng cho đơn giao hàng toàn quốc.'],
@@ -741,7 +726,7 @@ const vouchersData = [
     type: 'percent',
     category: 'discount',
     status: 'expiring',
-    expiry: '17/06/2026', // Đã sửa thành expiry
+    expiry: '17/06/2026', 
     description: 'Giảm 15% chỉ trong hôm nay',
     benefits: ['Giảm 15% giá trị đơn hàng.', 'Giảm tối đa 700.000đ.'],
     conditions: ['Áp dụng cho đơn hàng hợp lệ.', 'Không áp dụng đồng thời với mã giảm giá khác.'],
@@ -781,16 +766,14 @@ const vouchersData = [
   }
 ];
 
-// ─────────────────────────────────────────────
+
 // MAIN SEED FUNCTION
-// ─────────────────────────────────────────────
 async function seed() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log("MongoDB connected!");
   console.log("\n Bắt đầu seed dữ liệu VISTA...\n");
 
   try {
-    // Xoá dữ liệu cũ
     console.log(" Xoá dữ liệu cũ...");
     await Promise.all([
       Category.deleteMany({}),
@@ -803,17 +786,14 @@ async function seed() {
     ]);
     console.log("Đã xoá dữ liệu cũ\n");
 
-    // 1. Seed Categories
     console.log("Seed Categories...");
     await Category.insertMany(categoriesData);
     console.log(` ${categoriesData.length} categories\n`);
 
-    // 2. Seed Brands
     console.log(" Seed Brands...");
     await Brand.insertMany(brandsData);
     console.log(` ${brandsData.length} brands\n`);
 
-    // 3. Seed Products + Variants
     console.log("Seed Products & Variants...");
     let totalVariants = 0;
     for (const item of productsData) {
@@ -829,18 +809,15 @@ async function seed() {
     }
     console.log(`\n ${productsData.length} products, ${totalVariants} variants\n`);
 
-    // 4. Seed Users
     console.log("👤 Seed Users...");
     const users = await usersData();
     await User.insertMany(users);
     console.log(` ${users.length} users (password: Vista@123)\n`);
 
-    // 5. Seed Vouchers
     console.log("🎟️  Seed Vouchers...");
     await Voucher.insertMany(vouchersData);
     console.log(` ${vouchersData.length} vouchers\n`);
 
-    // Summary
     console.log("═══════════════════════════════════════════════");
     console.log("SEED HOÀN TẤT!\n");
     console.log("Tổng kết:");
