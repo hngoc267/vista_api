@@ -40,12 +40,6 @@ router.put(
   authMiddleware.requireRole("Manager"),
   productController.updateProduct
 );
-router.delete(
-  "/products/:id",
-  authMiddleware,
-  authMiddleware.requireRole("Manager"),
-  productController.deleteProduct
-);
 router.get(
   "/categories",
   authMiddleware,
@@ -200,6 +194,7 @@ router.post(
   authMiddleware,
   authMiddleware.requireRole("Staff"),
   reviewController.sendReply
+);
 
 // ==========================================
 // HẬU MÃI & ĐỔI TRẢ (H.Ngọc)

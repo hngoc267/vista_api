@@ -105,7 +105,7 @@ const ProductSchema = new Schema(
     Technical_specs: { type: Schema.Types.Mixed },
     Status: {
       type: String,
-      enum: ["on_sale", "out_of_stock"],
+      enum: ["on_sale", "discontinued", "out_of_stock"],
       default: "on_sale",
     },
     Discount: { type: Number, default: 0 },

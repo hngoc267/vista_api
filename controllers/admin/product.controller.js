@@ -1,9 +1,11 @@
 const { randomUUID } = require("crypto");
 const { Product, Product_variant, Category, Brand } = require("../../models/schema");
+const { buildProductStatusConditions } = require("../../services/product-status.service");
 
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 50;
-const PRODUCT_STATUSES = ["on_sale", "out_of_stock"];
+const PRODUCT_STATUSES = ["on_sale", "discontinued"];
+const PRODUCT_FILTER_STATUSES = [...PRODUCT_STATUSES, "out_of_stock"];
 const VARIANT_STATUSES = ["active", "out_of_stock"];
 const MAX_ID_GENERATION_ATTEMPTS = 5;
 
@@ -13,17 +15,6 @@ function isObject(value) {
 
 function hasOwn(value, key) {
   return Object.prototype.hasOwnProperty.call(value, key);
-}
-
-function resolveProductStatus(explicitStatus, variants, fallbackStatus = "on_sale") {
-  const allOutOfStock = Array.isArray(variants) && variants.length > 0 && variants.every((variant) => variant.Stock_quantity === 0);
-  if (allOutOfStock) {
-    return "out_of_stock";
-  }
-  if (explicitStatus && PRODUCT_STATUSES.includes(explicitStatus)) {
-    return explicitStatus;
-  }
-  return fallbackStatus;
 }
 
 function validateOptionalString(value, fieldName) {
@@ -292,11 +283,7 @@ exports.createProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: "Brand_id không tồn tại" });
     }
 
-    const productStatus = resolveProductStatus(
-      validated.product.Status,
-      validated.variants,
-      "on_sale"
-    );
+    const productStatus = validated.product.Status || "on_sale";
     const productInput = { ...validated.product, Status: productStatus };
     let transactionsSupported = true;
 
@@ -357,10 +344,10 @@ exports.getProducts = async (req, res) => {
       ? Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(requestedLimit)))
       : DEFAULT_PAGE_SIZE;
 
-    if (status && !PRODUCT_STATUSES.includes(status)) {
+    if (status && !PRODUCT_FILTER_STATUSES.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: `status phải là một trong: ${PRODUCT_STATUSES.join(", ")}`,
+        message: `status phải là một trong: ${PRODUCT_FILTER_STATUSES.join(", ")}`,
       });
     }
 
@@ -393,16 +380,31 @@ exports.getProducts = async (req, res) => {
     }
     if (categoryId) filter.Category_id = categoryId;
     if (brandId) filter.Brand_id = brandId;
-    if (status) filter.Status = status;
     if (isFlashSale.value !== undefined) filter.Is_Flash_Sale = isFlashSale.value;
     if (isAI.value !== undefined) filter.Is_AI = isAI.value;
 
+    const productIdConditions = [];
     if (minPrice.value !== undefined || maxPrice.value !== undefined) {
       const priceFilter = {};
       if (minPrice.value !== undefined) priceFilter.$gte = minPrice.value;
       if (maxPrice.value !== undefined) priceFilter.$lte = maxPrice.value;
       const matchingProductIds = await Product_variant.distinct("Product_id", { Price: priceFilter });
-      filter.Product_id = { $in: matchingProductIds };
+      productIdConditions.push({ Product_id: { $in: matchingProductIds } });
+    }
+
+    if (status) {
+      const availableProductIds = await Product_variant.distinct("Product_id", {
+        Stock_quantity: { $gt: 0 },
+      });
+      const statusConditions = buildProductStatusConditions(status, availableProductIds);
+      filter.Status = statusConditions.productStatus;
+      if (statusConditions.productIds) {
+        productIdConditions.push({ Product_id: statusConditions.productIds });
+      }
+    }
+
+    if (productIdConditions.length > 0) {
+      filter.$and = [...(filter.$and || []), ...productIdConditions];
     }
 
     const [total, products] = await Promise.all([
@@ -497,11 +499,8 @@ exports.updateProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: "Brand_id không tồn tại" });
     }
 
-    const productStatus = resolveProductStatus(
-      validated.product.Status,
-      validated.variants,
-      existing.Status || "on_sale"
-    );
+    const productStatus = validated.product.Status ||
+      (existing.Status === "discontinued" ? "discontinued" : "on_sale");
 
     const variantsToInsert = validated.variants.map((variant) => ({
       ...variant,
@@ -533,35 +532,6 @@ exports.updateProduct = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Không thể cập nhật sản phẩm",
-    });
-  }
-};
-
-exports.deleteProduct = async (req, res) => {
-  try {
-    const productId = cleanText(req.params.id);
-    const existing = await Product.findOne({ Product_id: productId });
-    if (!existing) {
-      return res.status(404).json({
-        success: false,
-        message: "Không tìm thấy sản phẩm",
-      });
-    }
-
-    await Promise.all([
-      Product_variant.deleteMany({ Product_id: productId }),
-      Product.deleteOne({ Product_id: productId }),
-    ]);
-
-    return res.json({
-      success: true,
-      message: "Xóa sản phẩm thành công",
-    });
-  } catch (error) {
-    console.error("Lỗi khi xóa sản phẩm Admin:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Không thể xóa sản phẩm",
     });
   }
 };
@@ -675,7 +645,7 @@ exports.bulkImportProducts = async (req, res) => {
         Description: cleanText(item.Description) || "",
         Images: images,
         Technical_specs: techSpecs,
-        Status: stockQuantity > 0 ? "on_sale" : "out_of_stock",
+        Status: "on_sale",
         Discount: Number(item.Discount) || 0,
         Is_Flash_Sale: Boolean(item.Is_Flash_Sale),
         Is_AI: Boolean(item.Is_AI),
