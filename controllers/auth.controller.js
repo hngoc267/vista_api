@@ -162,21 +162,62 @@ exports.getMe = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { Full_name, Phone_number, totalSpent } = req.body;
+    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+      return res.status(400).json({ success: false, message: "Dữ liệu yêu cầu không hợp lệ" });
+    }
 
+    const { Full_name, Phone_number } = req.body;
     const updateData = {};
-    if (Full_name !== undefined) updateData.Full_name = Full_name;
-    if (Phone_number !== undefined) updateData.Phone_number = Phone_number;
-    
-    if (totalSpent !== undefined) {
-      updateData.Total_spent = totalSpent;
+
+    if (Full_name !== undefined) {
+      if (typeof Full_name !== "string" || !Full_name.trim()) {
+        return res.status(400).json({ success: false, message: "Họ và tên không hợp lệ" });
+      }
+      if (Full_name.trim().length > 100) {
+        return res.status(400).json({ success: false, message: "Họ và tên không được vượt quá 100 ký tự" });
+      }
+      updateData.Full_name = Full_name.trim();
+    }
+
+    if (Phone_number !== undefined) {
+      if (typeof Phone_number !== "string") {
+        return res.status(400).json({ success: false, message: "Số điện thoại không hợp lệ" });
+      }
+      const trimmedPhone = Phone_number.trim();
+      if (trimmedPhone && !/^(0|\+84)[0-9]{9,10}$/.test(trimmedPhone)) {
+        return res.status(400).json({ success: false, message: "Số điện thoại không đúng định dạng" });
+      }
+      updateData.Phone_number = trimmedPhone;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Không có trường thông tin hợp lệ để cập nhật",
+      });
     }
 
     const user = await User.findOneAndUpdate(
       { User_id: req.user.User_id },
       { $set: updateData },
-      { new: true, projection: { Password: 0 } }
+      {
+        new: true,
+        projection: {
+          Password: 0,
+          Reset_otp: 0,
+          Reset_otp_expires: 0,
+          Admin_reset_otp_hash: 0,
+          Admin_reset_otp_expires: 0,
+          Admin_reset_otp_sent_at: 0,
+          Admin_reset_otp_attempts: 0,
+          Admin_reset_otp_locked_until: 0,
+        },
+      }
     );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
+    }
 
     res.json({ success: true, message: "Cập nhật thành công!", data: user });
   } catch (error) {
