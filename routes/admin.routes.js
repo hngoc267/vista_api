@@ -8,6 +8,8 @@ const orderController = require("../controllers/admin/order.controller");
 const productController = require("../controllers/admin/product.controller");
 const reviewController = require("../controllers/admin/review.controller");
 const returnOrderController = require("../controllers/admin/return-order.controller");
+const promotionController = require("../controllers/admin/promotion.controller");
+const customerController = require("../controllers/admin/customer.controller");
 
 // Manager và Staff xem danh sách và chi tiết sản phẩm
 router.get(
@@ -242,4 +244,85 @@ router.post(
   returnOrderController.rejectGoods
 );
 
+// ==========================================
+// QUẢN LÝ KHUYẾN MÃI (PROMOTIONS)
+// Manager: xem, tạo, sửa, đổi trạng thái, xóa
+// Staff: chỉ được xem danh sách và chi tiết
+// ==========================================
+router.get(
+  "/promotions",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  promotionController.getPromotions
+);
+
+router.get(
+  "/promotions/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  promotionController.getPromotionById
+);
+
+router.post(
+  "/promotions",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  promotionController.createPromotion
+);
+
+router.put(
+  "/promotions/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  promotionController.updatePromotion
+);
+
+router.patch(
+  "/promotions/:id/status",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  promotionController.changePromotionStatus
+);
+
+router.delete(
+  "/promotions/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  promotionController.deletePromotion
+);
+
+// ==========================================
+// QUẢN LÝ KHÁCH HÀNG (CUSTOMER MANAGEMENT)
+// Manager và Staff: xem danh sách và chi tiết khách hàng
+// ==========================================
+router.get(
+  "/customers",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  customerController.getCustomers
+);
+
+router.get(
+  "/customers/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  customerController.getCustomerById
+);
+
+// Khóa / Mở khóa tài khoản khách hàng: chỉ Manager
+router.patch(
+  "/customers/:id/lock",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  customerController.lockCustomer
+);
+
+router.patch(
+  "/customers/:id/unlock",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  customerController.unlockCustomer
+);
+
 module.exports = router;
+

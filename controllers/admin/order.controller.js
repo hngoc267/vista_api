@@ -395,7 +395,7 @@ async function rejectedResult(orderId) {
 
 // Xác nhận đơn: Chờ xác nhận → Đang xử lý, hệ thống tự cấp mã vận đơn
 async function confirmOne(orderId, actor, note) {
-  const order = await Order.findOne({ Order_id: orderId }).select("Status").lean();
+  const order = await Order.findOne({ Order_id: orderId }).select("Status Voucher_code User_id").lean();
 
   if (order?.Status === "pending_payment") {
     return { ok: false, status: 400, message: "Đơn hàng chưa được thanh toán, chưa thể xác nhận" };

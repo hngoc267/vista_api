@@ -1,3 +1,4 @@
+const { VOUCHER_COUNTED_ORDER_STATUSES } = require("../services/promotion-helper");
 const {
   Category,
   Order,
@@ -264,6 +265,12 @@ function detectRequiredCategoryAliases(voucher) {
   const text = normalizeText(voucherTexts(voucher).join(" "));
   const aliases = [];
 
+  if (Array.isArray(voucher?.applicable_categories) && voucher.applicable_categories.length > 0) {
+    for (const cat of voucher.applicable_categories) {
+      aliases.push(normalizeText(cat));
+    }
+  }
+
   if (text.includes("laptop")) {
     aliases.push("laptop");
   }
@@ -437,6 +444,46 @@ async function assertVoucherCanBeUsed(voucher, { userId, totalItemsPrice, totalQ
 
   if (voucher.status === "used") {
     throw createVoucherError("Mã giảm giá này đã được sử dụng.");
+  }
+
+  if (voucher.status === "paused") {
+    throw createVoucherError("Mã giảm giá này hiện đang tạm ngừng áp dụng.");
+  }
+
+  if (voucher.status === "draft") {
+    throw createVoucherError("Mã giảm giá này chưa được phát hành.");
+  }
+
+  if (voucher.status === "expired") {
+    throw createVoucherError("Mã giảm giá đã hết hạn.");
+  }
+
+  if (voucher.startDate) {
+    const start = parseVietnameseDate(voucher.startDate);
+    if (start && start > new Date()) {
+      throw createVoucherError("Chương trình khuyến mãi chưa bắt đầu.");
+    }
+  }
+
+  const usageLimitNum = Number(voucher.usage_limit) || 0;
+  if (usageLimitNum > 0) {
+    const totalUsed = await Order.countDocuments({
+      $or: [{ Voucher_id: voucher.code }, { Voucher_code: voucher.code }],
+    });
+    if (totalUsed >= usageLimitNum) {
+      throw createVoucherError("Mã giảm giá đã hết lượt sử dụng.");
+    }
+  }
+
+  const limitPerCustomer = Number(voucher.usage_limit_per_customer) || 0;
+  if (userId && limitPerCustomer > 0) {
+    const usedByUser = await Order.countDocuments({
+      User_id: userId,
+      $or: [{ Voucher_id: voucher.code }, { Voucher_code: voucher.code }],
+    });
+    if (usedByUser >= limitPerCustomer) {
+      throw createVoucherError("Bạn đã sử dụng hết lượt cho mã giảm giá này.");
+    }
   }
 
   const minOrderValue = getMinOrderValue(voucher);
@@ -835,3 +882,5 @@ exports.applyVoucher = async (req, res) => {
 
 exports.calculateVoucherDiscount = calculateVoucherDiscount;
 exports.isVoucherExpired = isVoucherExpired;
+
+exports.assertVoucherCanBeUsed = assertVoucherCanBeUsed;
