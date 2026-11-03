@@ -6,6 +6,7 @@ const staffController = require("../controllers/admin/staff.controller");
 const passwordResetController = require("../controllers/admin/password-reset.controller");
 const orderController = require("../controllers/admin/order.controller");
 const productController = require("../controllers/admin/product.controller");
+const reviewController = require("../controllers/admin/review.controller");
 const returnOrderController = require("../controllers/admin/return-order.controller");
 
 // Manager và Staff xem danh sách và chi tiết sản phẩm
@@ -38,12 +39,6 @@ router.put(
   authMiddleware,
   authMiddleware.requireRole("Manager"),
   productController.updateProduct
-);
-router.delete(
-  "/products/:id",
-  authMiddleware,
-  authMiddleware.requireRole("Manager"),
-  productController.deleteProduct
 );
 router.get(
   "/categories",
@@ -164,6 +159,42 @@ router.patch(
   orderController.handOverOrder
 );
 
+router.get(
+  "/reviews",
+  authMiddleware,
+  authMiddleware.requireRole("Staff", "Manager"),
+  reviewController.getReviews
+);
+router.get(
+  "/reviews/:reviewId",
+  authMiddleware,
+  authMiddleware.requireRole("Staff", "Manager"),
+  reviewController.getReviewDetail
+);
+router.patch(
+  "/reviews/:reviewId/moderate",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  reviewController.moderateReview
+);
+router.post(
+  "/reviews/:reviewId/suggest-reply",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  reviewController.suggestReply
+);
+router.put(
+  "/reviews/:reviewId/draft",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  reviewController.saveDraft
+);
+router.post(
+  "/reviews/:reviewId/send",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  reviewController.sendReply
+);
 
 // ==========================================
 // HẬU MÃI & ĐỔI TRẢ (H.Ngọc)

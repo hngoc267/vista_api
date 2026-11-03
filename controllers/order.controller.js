@@ -139,7 +139,7 @@ exports.createOrder = async (req, res) => {
     const variantIds = [...new Set(orderDetails.map((item) => cleanString(item.Product_variant_id)).filter(Boolean))];
     const variants = await Product_variant.find({
       Product_variant_id: { $in: variantIds },
-      Status: "active",
+      Stock_quantity: { $gt: 0 },
     }).lean();
     const variantMap = new Map(variants.map((variant) => [variant.Product_variant_id, variant]));
 
@@ -156,6 +156,17 @@ exports.createOrder = async (req, res) => {
       : [];
     const productMap = new Map(products.map((product) => [product.Product_id, product]));
 
+    const unavailableProduct = variants.find((variant) =>
+      productMap.get(variant.Product_id)?.Status !== "on_sale"
+    );
+
+    if (unavailableProduct) {
+      return res.status(400).json({
+        success: false,
+        message: "Sản phẩm hiện không còn được bán.",
+      });
+    }
+
     const normalizedDetails = orderDetails.map((detail) => {
       const variant = variantMap.get(cleanString(detail.Product_variant_id));
       const product = productMap.get(variant.Product_id) || null;
@@ -165,7 +176,7 @@ exports.createOrder = async (req, res) => {
     const outOfStockItem = normalizedDetails.find((detail) => {
       const variant = variantMap.get(detail.Product_variant_id);
       const stock = Number(variant.Stock_quantity) || 0;
-      return stock > 0 && detail.Quantity > stock;
+      return detail.Quantity > stock;
     });
 
     if (outOfStockItem) {

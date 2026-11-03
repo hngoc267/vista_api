@@ -1,8 +1,20 @@
   const { Product, Product_variant, Category, Brand, Review, Order_detail, Order, User } = require("../models/schema");
+  const { getProductDisplayStatus } = require("../services/product-status.service");
   const DEFAULT_MOCK_REVIEW_COUNT = Number(process.env.DEFAULT_MOCK_REVIEW_COUNT || 67);
+  const SELLABLE_PRODUCT_STATUSES = ["on_sale"];
 
   function cleanText(value) {
     return String(value || '').replace(/\s+/g, ' ').trim();
+  }
+
+  async function withInStockProducts(filter) {
+    const productIds = await Product_variant.distinct("Product_id", {
+      Stock_quantity: { $gt: 0 },
+    });
+    return {
+      ...filter,
+      $and: [...(filter.$and || []), { Product_id: { $in: productIds } }],
+    };
   }
 
   function cleanMediaValue(value) {
@@ -132,7 +144,7 @@
     try {
       const { category, brand, minPrice, maxPrice, search, page = 1, limit = 12, sort = "newest", isAI, isNew, isPromo } = req.query;
 
-      const filter = { Status: "on_sale" };
+      const filter = { Status: { $in: SELLABLE_PRODUCT_STATUSES } };
       if (category) filter.Category_id = category;
       
       if (brand) {
@@ -159,14 +171,14 @@
           filter.Is_AI = { $ne: true };
       }
       
-      let products = await Product.find(filter).lean();
+      let products = await Product.find(await withInStockProducts(filter)).lean();
 
 
       let productsWithPrice = await Promise.all(
         products.map(async (product) => {
           const variants = await Product_variant.find({
             Product_id: product.Product_id,
-            Status: "active",
+            Stock_quantity: { $gt: 0 },
           }).sort({ Price: 1 }).lean();
 
           const originalPrice = variants[0]?.Price || 0;
@@ -182,6 +194,7 @@
           };
         })
       );
+      productsWithPrice = productsWithPrice.filter((product) => product.variants.length > 0);
 
 
       if (minPrice || maxPrice) {
@@ -223,6 +236,10 @@
       if (!product) return res.status(404).json({ success: false, message: "Không tìm thấy sản phẩm" });
 
       const variants = await Product_variant.find({ Product_id: req.params.id }).sort({ Price: 1 }).lean();
+      const totalStock = variants.reduce(
+        (total, variant) => total + Math.max(0, Number(variant.Stock_quantity) || 0),
+        0
+      );
       const category = await Category.findOne({ Category_id: product.Category_id }).lean();
       const brand = await Brand.findOne({ Brand_id: product.Brand_id }).lean();
       const reviews = await getPersistedReviewsByProductId(req.params.id);
@@ -235,6 +252,7 @@
         success: true,
         data: {
           ...product,
+          Status: getProductDisplayStatus(product.Status, totalStock),
           Total_reviews: mockReviewCount + reviews.length,
           variants,
           category,
@@ -255,9 +273,9 @@
 
   exports.getFeaturedProducts = async (req, res) => {
     try {
-      const products = await Product.find({
-        Status: "on_sale" 
-      })
+      const products = await Product.find(await withInStockProducts({
+        Status: { $in: SELLABLE_PRODUCT_STATUSES },
+      }))
       .sort({ Average_rating: -1 }) 
       .limit(8)
       .lean();
@@ -266,7 +284,7 @@
         products.map(async (product) => {
           const variant = await Product_variant.findOne({
             Product_id: product.Product_id,
-            Status: "active"
+            Stock_quantity: { $gt: 0 }
           })
           .sort({ Price: 1 })
           .lean();
@@ -278,7 +296,7 @@
         })
       );
 
-      res.json({ success: true, data: productsWithPrice });
+      res.json({ success: true, data: productsWithPrice.filter((product) => product.min_price > 0) });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -287,17 +305,20 @@
 
   exports.getFlashSaleProducts = async (req, res) => {
     try {
-      const products = await Product.find({ Status: "on_sale", Is_Flash_Sale: true })
+      const products = await Product.find(await withInStockProducts({
+        Status: { $in: SELLABLE_PRODUCT_STATUSES },
+        Is_Flash_Sale: true,
+      }))
     .sort({ Discount: -1 })
     .limit(16)
     .lean();
       const productsWithPrice = await Promise.all(
         products.map(async (product) => {
-          const variant = await Product_variant.findOne({ Product_id: product.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
+          const variant = await Product_variant.findOne({ Product_id: product.Product_id, Stock_quantity: { $gt: 0 } }).sort({ Price: 1 }).lean();
           return { ...product, min_price: variant?.Price || 0 };
         })
       );
-      res.json({ success: true, data: productsWithPrice });
+      res.json({ success: true, data: productsWithPrice.filter((product) => product.min_price > 0) });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -306,16 +327,16 @@
 
   exports.getAISuggestedProducts = async (req, res) => {
     try {
-      const products = await Product.find({
-        Status: "on_sale",
+      const products = await Product.find(await withInStockProducts({
+        Status: { $in: SELLABLE_PRODUCT_STATUSES },
         Is_AI: true
-      }).limit(8).lean();
+      })).limit(8).lean();
 
       const productsWithPrice = await Promise.all(
         products.map(async (product) => {
           const variant = await Product_variant.findOne({
             Product_id: product.Product_id,
-            Status: "active"
+            Stock_quantity: { $gt: 0 }
           })
           .sort({ Price: 1 })
           .lean();
@@ -329,7 +350,7 @@
 
       res.json({
         success: true,
-        data: productsWithPrice
+        data: productsWithPrice.filter((product) => product.min_price > 0)
       });
 
     } catch (error) {
@@ -367,14 +388,18 @@
       const product = await Product.findOne({ Product_id: req.params.id }).lean();
       if (!product) return res.status(404).json({ success: false, message: "Không tìm thấy sản phẩm" });
 
-      const related = await Product.find({ Category_id: product.Category_id, Product_id: { $ne: req.params.id }, Status: "on_sale" }).limit(4).lean();
+      const related = await Product.find(await withInStockProducts({
+        Category_id: product.Category_id,
+        Product_id: { $ne: req.params.id },
+        Status: { $in: SELLABLE_PRODUCT_STATUSES },
+      })).limit(4).lean();
       const relatedWithPrice = await Promise.all(
         related.map(async (p) => {
-          const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
+          const variant = await Product_variant.findOne({ Product_id: p.Product_id, Stock_quantity: { $gt: 0 } }).sort({ Price: 1 }).lean();
           return { ...p, min_price: variant?.Price || 0 };
         })
       );
-      res.json({ success: true, data: relatedWithPrice });
+      res.json({ success: true, data: relatedWithPrice.filter((product) => product.min_price > 0) });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -383,14 +408,17 @@
 
   exports.getProductsByCategory = async (req, res) => {
     try {
-      const products = await Product.find({ Category_id: req.params.categoryId, Status: "on_sale" }).limit(4).lean();
+      const products = await Product.find(await withInStockProducts({
+        Category_id: req.params.categoryId,
+        Status: { $in: SELLABLE_PRODUCT_STATUSES },
+      })).limit(4).lean();
       const productsWithPrice = await Promise.all(
         products.map(async (product) => {
-          const variant = await Product_variant.findOne({ Product_id: product.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
+          const variant = await Product_variant.findOne({ Product_id: product.Product_id, Stock_quantity: { $gt: 0 } }).sort({ Price: 1 }).lean();
           return { ...product, min_price: variant?.Price || 0 };
         })
       );
-      res.json({ success: true, data: productsWithPrice });
+      res.json({ success: true, data: productsWithPrice.filter((product) => product.min_price > 0) });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -411,7 +439,7 @@ exports.compareProducts = async (req, res) => {
       
       const variant = await Product_variant.findOne({ 
         Product_variant_id: variantId,
-        Status: 'active'
+        Stock_quantity: { $gt: 0 }
       }).lean();
 
       if (!variant) continue;
@@ -419,7 +447,7 @@ exports.compareProducts = async (req, res) => {
       
       const product = await Product.findOne({ 
         Product_id: variant.Product_id,
-        Status: 'on_sale'
+        Status: { $in: SELLABLE_PRODUCT_STATUSES }
       }).lean();
 
       if (!product) continue;
@@ -456,10 +484,13 @@ exports.compareProducts = async (req, res) => {
       );
 
       if (isFlashIntent) {
-        let flashProducts = await Product.find({ Status: 'on_sale', Is_Flash_Sale: true }).lean();
+        let flashProducts = await Product.find(await withInStockProducts({
+          Status: { $in: SELLABLE_PRODUCT_STATUSES },
+          Is_Flash_Sale: true,
+        })).lean();
         flashProducts = await Promise.all(flashProducts.map(async (p) => {
           const variant = await Product_variant.findOne({
-            Product_id: p.Product_id, Status: 'active'
+            Product_id: p.Product_id, Stock_quantity: { $gt: 0 }
           }).sort({ Price: 1 }).lean();
           return { ...p, min_price: variant?.Price || 0 };
         }));
@@ -546,15 +577,19 @@ exports.compareProducts = async (req, res) => {
 
       if (crossMatch) {
 
-        const crossFilter = { Status: "on_sale", Product_name: { $regex: crossMatch, $options: 'i' } };
-        let crossProducts = await Product.find(crossFilter).lean();
+        const crossFilter = {
+          Status: { $in: SELLABLE_PRODUCT_STATUSES },
+          Product_name: { $regex: crossMatch, $options: 'i' },
+        };
+        let crossProducts = await Product.find(await withInStockProducts(crossFilter)).lean();
         
         crossProducts = await Promise.all(crossProducts.map(async (p) => {
-          const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
+          const variant = await Product_variant.findOne({ Product_id: p.Product_id, Stock_quantity: { $gt: 0 } }).sort({ Price: 1 }).lean();
           const originalPrice = variant?.Price || 0;
           const finalPrice = originalPrice - (originalPrice * (p.Discount || 0) / 100);
           return { ...p, min_price: originalPrice, final_price: finalPrice };
         }));
+        crossProducts = crossProducts.filter((product) => product.min_price > 0);
 
         if (intent.minPrice) crossProducts = crossProducts.filter(p => p.final_price >= intent.minPrice);
         if (intent.maxPrice) crossProducts = crossProducts.filter(p => p.final_price <= intent.maxPrice);
@@ -573,7 +608,7 @@ exports.compareProducts = async (req, res) => {
       console.log("Intent final phân tích bởi AI:", intent);
   
 
-      const filter = { Status: "on_sale" };
+      const filter = { Status: { $in: SELLABLE_PRODUCT_STATUSES } };
   
 
       let brandNameApplied = null;
@@ -700,7 +735,7 @@ exports.compareProducts = async (req, res) => {
         );
 
       }
-      let products = await Product.find(filter).lean();
+      let products = await Product.find(await withInStockProducts(filter)).lean();
 
       if (intent.priority === "performance") {
         products.sort((a, b) => {
@@ -720,7 +755,7 @@ exports.compareProducts = async (req, res) => {
   
 
       let results = await Promise.all(products.map(async (p) => {
-        const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
+        const variant = await Product_variant.findOne({ Product_id: p.Product_id, Stock_quantity: { $gt: 0 } }).sort({ Price: 1 }).lean();
         const originalPrice = variant?.Price || 0;
         
 
@@ -733,6 +768,7 @@ exports.compareProducts = async (req, res) => {
           final_price: finalPrice   
         };
       }));
+      results = results.filter((product) => product.min_price > 0);
   
 
       if (intent.minPrice) {
