@@ -143,10 +143,13 @@ async function buildCartResponse(cart) {
     ? await Product.find({ Product_id: { $in: productIds } }).lean()
     : [];
   const productMap = new Map(products.map((product) => [product.Product_id, product]));
+  const sellableProductIds = products
+    .filter((product) => product.Status === "on_sale")
+    .map((product) => product.Product_id);
   const activeVariants = productIds.length
     ? await Product_variant.find({
-        Product_id: { $in: productIds },
-        Status: "active",
+        Product_id: { $in: sellableProductIds },
+        Stock_quantity: { $gt: 0 },
       })
         .sort({ Price: 1 })
         .lean()
@@ -261,8 +264,9 @@ exports.addItem = async (req, res) => {
       return res.status(404).json({ success: false, message: "Không tìm thấy biến thể sản phẩm" });
     }
 
-    if (variant.Status && variant.Status !== "active") {
-      return res.status(400).json({ success: false, message: "Biến thể sản phẩm hiện không khả dụng" });
+    const product = await Product.findOne({ Product_id: variant.Product_id }).lean();
+    if (!product || product.Status !== "on_sale") {
+      return res.status(400).json({ success: false, message: "Sản phẩm hiện không còn được bán" });
     }
 
     const cart = await getOrCreateCart(userId);
@@ -274,7 +278,11 @@ exports.addItem = async (req, res) => {
     const nextQuantity = (existingItem?.Quantity || 0) + quantity;
     const stock = Number(variant.Stock_quantity) || 0;
 
-    if (stock > 0 && nextQuantity > stock) {
+    if (stock <= 0) {
+      return res.status(400).json({ success: false, message: "Sản phẩm hiện đã hết hàng" });
+    }
+
+    if (nextQuantity > stock) {
       return res.status(400).json({ success: false, message: "Số lượng vượt quá tồn kho" });
     }
 
@@ -322,8 +330,16 @@ exports.updateItem = async (req, res) => {
       return res.status(404).json({ success: false, message: "Không tìm thấy biến thể sản phẩm" });
     }
 
+    const product = await Product.findOne({ Product_id: variant.Product_id }).lean();
+    if (!product || product.Status !== "on_sale") {
+      return res.status(400).json({ success: false, message: "Sản phẩm hiện không còn được bán" });
+    }
+
     const stock = Number(variant.Stock_quantity) || 0;
-    if (stock > 0 && quantity > stock) {
+    if (stock <= 0) {
+      return res.status(400).json({ success: false, message: "Sản phẩm hiện đã hết hàng" });
+    }
+    if (quantity > stock) {
       return res.status(400).json({ success: false, message: "Số lượng vượt quá tồn kho" });
     }
 
