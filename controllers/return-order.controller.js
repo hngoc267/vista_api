@@ -1,4 +1,7 @@
 const { Order, Order_detail, Return_order, User } = require('../models/schema');
+const { notifyOrderEvent } = require('../services/notification.service');
+const { ORDER_EVENTS, buildHistoryEntry } = require('../services/order-status.service');
+const { RETURN_REASONS, codesFromText } = require('../services/reason-catalog');
 
 const RETURNABLE_ORDER_STATUSES = new Set(['delivered', 'review']);
 const ACTIVE_RETURN_STATUSES = ['pending', 'approved', 'completed', 'refunded'];
@@ -256,7 +259,7 @@ const createReturnOrder = async (req, res) => {
         data: {
           Order_id: orderId,
           Return_order_id: existingRequests[0]?.Return_order_id || '',
-          Status: 'returning',
+          Status: 'pending',
           returnSummary: buildReturnSummary(existingRequests),
         },
       });
@@ -312,6 +315,7 @@ const createReturnOrder = async (req, res) => {
         Product_variant_id: selectedItem.Product_variant_id,
         Return_quantity: quantity,
         Reason_type: reasonType,
+        Reason_codes: codesFromText(RETURN_REASONS, reasonType),
         Description: description,
         Evidence_images: index === 0 ? evidenceImages : [],
         Refund_amount: refundAmount,
@@ -320,7 +324,7 @@ const createReturnOrder = async (req, res) => {
         Return_email: returnEmail,
         Return_address: returnAddress,
         Return_tracking_number: buildReturnTrackingNumber(index),
-        Status: 'refunded',
+        Status: 'pending',
         Created_at: createdAt,
       };
     });
@@ -329,31 +333,24 @@ const createReturnOrder = async (req, res) => {
 
     await Order.updateOne(
       { Order_id: orderId },
-      { $set: { Status: 'returning' } }
+      {
+        $set: { Status: 'returning' },
+        $push: {
+          Status_history: buildHistoryEntry({
+            fromStatus: order.Status,
+            toStatus: 'returning',
+            event: ORDER_EVENTS.RETURN_REQUESTED,
+            actor: { id: order.User_id, name: order.Receiver_name || 'Khách hàng' },
+            note: reasonType,
+          }),
+        },
+      }
     );
-    // ==========================================
-    // LOGIC TRỪ ĐIỂM: CHỈ TRỪ ĐÚNG SỐ TIỀN HOÀN TRẢ
-    // ==========================================
-    const userId = order.User_id;
-    // Tính tổng số tiền hoàn của đợt trả hàng này
-    const totalRefundAmount = returnDocuments.reduce((sum, doc) => sum + (Number(doc.Refund_amount) || 0), 0);
+    // BUG-02 FIX: Không trừ Total_spent của khách khi mới tạo yêu cầu hoàn trả.
+    // Total_spent sẽ chỉ được điều chỉnh khi Staff tại kho kiểm tra và xác nhận hàng đạt (acceptGoods).
+    
 
-    if (userId && totalRefundAmount > 0) {
-      // 1. Trừ điểm tương ứng với số tiền hoàn trả
-      await User.updateOne(
-        { User_id: userId },
-        { $inc: { Total_spent: -totalRefundAmount } }
-      );
-      
-      // 2. Chốt chặn an toàn: Nếu lỡ điểm bị âm thì set về 0
-      await User.updateOne(
-        { User_id: userId, Total_spent: { $lt: 0 } },
-        { $set: { Total_spent: 0 } }
-      );
-      
-      console.log(`Đã TRỪ ${totalRefundAmount} điểm của User ${userId} do hoàn hàng`);
-    }
-    // ==========================================
+    notifyOrderEvent(orderId, 'return_requested');
 
     return res.status(201).json({
       success: true,

@@ -73,26 +73,53 @@ exports.register = async (req, res) => {
   }
 };
 
+
 exports.login = async (req, res) => {
   try {
     const { Email, Password } = req.body;
 
-    const user = await User.findOne({ Email });
+    const user = await User.findOne({
+      Email: String(Email || "").trim().toLowerCase(),
+    });
+
     if (!user) {
-      return res.status(400).json({ success: false, message: "Email hoặc mật khẩu không đúng" });
+      return res.status(400).json({
+        success: false,
+        message: "Email hoặc mật khẩu không đúng",
+      });
     }
 
     if (user.Status === "blocked") {
-      return res.status(403).json({ success: false, message: "Tài khoản đã bị khóa" });
+      return res.status(403).json({
+        success: false,
+        message: "Tài khoản đã bị khóa",
+      });
+    }
+
+    if (user.Locked_Until && user.Locked_Until > new Date()) {
+      return res.status(403).json({
+        success: false,
+        message: "Tài khoản đang bị khóa tạm thời",
+      });
     }
 
     const isMatch = await bcrypt.compare(Password, user.Password);
+
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: "Email hoặc mật khẩu không đúng" });
+      return res.status(400).json({
+        success: false,
+        message: "Email hoặc mật khẩu không đúng",
+      });
     }
 
+    const role = user.Role || "Customer";
+
     const token = jwt.sign(
-      { User_id: user.User_id, Email: user.Email },
+      {
+        User_id: user.User_id,
+        Email: user.Email,
+        Role: role,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -107,13 +134,18 @@ exports.login = async (req, res) => {
         Email: user.Email,
         Full_name: user.Full_name,
         Phone_number: user.Phone_number,
-        Total_spent: user.Total_spent
+        Total_spent: user.Total_spent,
+        Role: role,
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+
 
 exports.getMe = async (req, res) => {
   try {
@@ -130,21 +162,62 @@ exports.getMe = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { Full_name, Phone_number, totalSpent } = req.body;
+    if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+      return res.status(400).json({ success: false, message: "Dữ liệu yêu cầu không hợp lệ" });
+    }
 
+    const { Full_name, Phone_number } = req.body;
     const updateData = {};
-    if (Full_name !== undefined) updateData.Full_name = Full_name;
-    if (Phone_number !== undefined) updateData.Phone_number = Phone_number;
-    
-    if (totalSpent !== undefined) {
-      updateData.Total_spent = totalSpent;
+
+    if (Full_name !== undefined) {
+      if (typeof Full_name !== "string" || !Full_name.trim()) {
+        return res.status(400).json({ success: false, message: "Họ và tên không hợp lệ" });
+      }
+      if (Full_name.trim().length > 100) {
+        return res.status(400).json({ success: false, message: "Họ và tên không được vượt quá 100 ký tự" });
+      }
+      updateData.Full_name = Full_name.trim();
+    }
+
+    if (Phone_number !== undefined) {
+      if (typeof Phone_number !== "string") {
+        return res.status(400).json({ success: false, message: "Số điện thoại không hợp lệ" });
+      }
+      const trimmedPhone = Phone_number.trim();
+      if (trimmedPhone && !/^(0|\+84)[0-9]{9,10}$/.test(trimmedPhone)) {
+        return res.status(400).json({ success: false, message: "Số điện thoại không đúng định dạng" });
+      }
+      updateData.Phone_number = trimmedPhone;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Không có trường thông tin hợp lệ để cập nhật",
+      });
     }
 
     const user = await User.findOneAndUpdate(
       { User_id: req.user.User_id },
       { $set: updateData },
-      { new: true, projection: { Password: 0 } }
+      {
+        new: true,
+        projection: {
+          Password: 0,
+          Reset_otp: 0,
+          Reset_otp_expires: 0,
+          Admin_reset_otp_hash: 0,
+          Admin_reset_otp_expires: 0,
+          Admin_reset_otp_sent_at: 0,
+          Admin_reset_otp_attempts: 0,
+          Admin_reset_otp_locked_until: 0,
+        },
+      }
     );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
+    }
 
     res.json({ success: true, message: "Cập nhật thành công!", data: user });
   } catch (error) {
@@ -171,6 +244,7 @@ exports.changePassword = async (req, res) => {
 
     res.json({ success: true, message: "Đổi mật khẩu thành công!" });
   } catch (error) {
+    console.error("Admin password reset email failed:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -190,7 +264,8 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { Email } = req.body;
 
-    const user = await User.findOne({ Email });
+    const email = String(Email || "").trim().toLowerCase();
+    const user = await User.findOne({ Email: email, Role: "Customer" });
     if (!user) {
       return res.status(404).json({ success: false, message: "Email này không tồn tại trên hệ thống!" });
     }
@@ -200,7 +275,7 @@ exports.forgotPassword = async (req, res) => {
     const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
     await User.findOneAndUpdate(
-      { Email },
+      { Email: email, Role: "Customer" },
       { $set: { Reset_otp: otp, Reset_otp_expires: otpExpires } }
     );
 
@@ -227,6 +302,8 @@ exports.forgotPassword = async (req, res) => {
 
     res.json({ success: true, message: "Mã OTP đã được gửi đến email của bạn!" });
   } catch (error) {
+    console.error("Email send error:", error.message);
+    console.error("Email error code:", error.code);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -235,10 +312,12 @@ exports.forgotPassword = async (req, res) => {
 exports.verifyOTP = async (req, res) => {
   try {
     const { Email, otpCode } = req.body;
+    const email = String(Email || "").trim().toLowerCase();
 
     const user = await User.findOne({ 
-      Email,
-      Reset_otp: otpCode,
+      Email: email,
+      Role: "Customer",
+      Reset_otp: String(otpCode || "").trim(),
       Reset_otp_expires: { $gt: new Date() } 
     });
 
@@ -256,10 +335,13 @@ exports.verifyOTP = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { Email, otpCode, Password } = req.body;
+    const email = String(Email || "").trim().toLowerCase();
+    const otp = String(otpCode || "").trim();
 
     const user = await User.findOne({ 
-      Email,
-      Reset_otp: otpCode,
+      Email: email,
+      Role: "Customer",
+      Reset_otp: otp,
       Reset_otp_expires: { $gt: new Date() }
     });
 
@@ -268,17 +350,28 @@ exports.resetPassword = async (req, res) => {
     }
 
 
-    const bcrypt = require("bcryptjs");
     const hashedPassword = await bcrypt.hash(Password, 10);
 
-
-    await User.findOneAndUpdate(
-      { Email },
+    const result = await User.updateOne(
+      {
+        _id: user._id,
+        Email: email,
+        Role: "Customer",
+        Reset_otp: otp,
+        Reset_otp_expires: { $gt: new Date() },
+      },
       { 
         $set: { Password: hashedPassword },
         $unset: { Reset_otp: "", Reset_otp_expires: "" } 
       }
     );
+
+    if (result.matchedCount !== 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Yêu cầu đã hết hạn. Vui lòng thao tác lại từ đầu!",
+      });
+    }
 
     res.json({ success: true, message: "Đặt lại mật khẩu thành công!" });
   } catch (error) {

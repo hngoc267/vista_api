@@ -1,4 +1,15 @@
 const { Session, Message, Product, Product_variant, Category, Voucher } = require("../models/schema");
+const SELLABLE_PRODUCT_STATUSES = ["on_sale"];
+
+async function withInStockProducts(filter) {
+  const productIds = await Product_variant.distinct("Product_id", {
+    Stock_quantity: { $gt: 0 },
+  });
+  return {
+    ...filter,
+    $and: [...(filter.$and || []), { Product_id: { $in: productIds } }],
+  };
+}
 
 
 async function genSessionId() {
@@ -187,24 +198,29 @@ exports.sendMessage = async (req, res) => {
       }
 
     } else if (isFlashIntent) {
-      let flashProducts = await Product.find({ Status: 'on_sale', Is_Flash_Sale: true }).lean();
+      let flashProducts = await Product.find(await withInStockProducts({
+        Status: { $in: SELLABLE_PRODUCT_STATUSES },
+        Is_Flash_Sale: true,
+      })).lean();
       flashProducts = await Promise.all(flashProducts.map(async (p) => {
-        const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: 'active' }).sort({ Price: 1 }).lean();
+        const variant = await Product_variant.findOne({ Product_id: p.Product_id, Stock_quantity: { $gt: 0 } }).sort({ Price: 1 }).lean();
         return { ...p, min_price: variant?.Price || 0 };
       }));
+      flashProducts = flashProducts.filter((product) => product.min_price > 0);
       products = flashProducts.slice(0, 4).map(p => ({ ...p, aiTag: "⚡ Flash Sale" }));
       overrideReply = `VISTA đang có ${flashProducts.length} sản phẩm Flash Sale hôm nay, giảm giá cực sốc!`;
 
     } else if (crossMatch) {
-      let crossProducts = await Product.find({
-        Status: "on_sale",
+      let crossProducts = await Product.find(await withInStockProducts({
+        Status: { $in: SELLABLE_PRODUCT_STATUSES },
         Product_name: { $regex: crossMatch, $options: 'i' }
-      }).lean();
+      })).lean();
 
       crossProducts = await Promise.all(crossProducts.map(async (p) => {
-        const variant = await Product_variant.findOne({ Product_id: p.Product_id, Status: "active" }).sort({ Price: 1 }).lean();
+        const variant = await Product_variant.findOne({ Product_id: p.Product_id, Stock_quantity: { $gt: 0 } }).sort({ Price: 1 }).lean();
         return { ...p, min_price: variant?.Price || 0 };
       }));
+      crossProducts = crossProducts.filter((product) => product.min_price > 0);
 
       if (intent.maxPrice) crossProducts = crossProducts.filter(p => p.min_price <= intent.maxPrice);
       crossProducts.sort((a, b) => (b.Average_rating || 0) - (a.Average_rating || 0));
@@ -216,7 +232,7 @@ exports.sendMessage = async (req, res) => {
       }));
 
     } else if (intent.hasProducts === true || (intent.category && intent.category !== "null")) {
-      const filter = { Status: "on_sale" };
+      const filter = { Status: { $in: SELLABLE_PRODUCT_STATUSES } };
       const subKeywords = ['chuột', 'bàn phím', 'tai nghe', 'loa', 'sạc', 'hub', 'màn hình'];
       const matchedSub = subKeywords.find(kw => content.toLowerCase().includes(kw));
       if (matchedSub) {
@@ -229,13 +245,14 @@ exports.sendMessage = async (req, res) => {
         if (cat) filter.Category_id = cat.Category_id;
       }
 
-      let found = await Product.find(filter).lean();
+      let found = await Product.find(await withInStockProducts(filter)).lean();
       found = await Promise.all(found.map(async (p) => {
         const variant = await Product_variant.findOne({
-          Product_id: p.Product_id, Status: "active",
+          Product_id: p.Product_id, Stock_quantity: { $gt: 0 },
         }).sort({ Price: 1 }).lean();
         return { ...p, min_price: variant?.Price || 0 };
       }));
+      found = found.filter((product) => product.min_price > 0);
 
       if (intent.maxPrice) {
         found = found.filter(p => p.min_price <= intent.maxPrice);

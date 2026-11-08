@@ -1,0 +1,328 @@
+const express = require("express");
+const router = express.Router();
+
+const authMiddleware = require("../middleware/auth.middleware");
+const staffController = require("../controllers/admin/staff.controller");
+const passwordResetController = require("../controllers/admin/password-reset.controller");
+const orderController = require("../controllers/admin/order.controller");
+const productController = require("../controllers/admin/product.controller");
+const reviewController = require("../controllers/admin/review.controller");
+const returnOrderController = require("../controllers/admin/return-order.controller");
+const promotionController = require("../controllers/admin/promotion.controller");
+const customerController = require("../controllers/admin/customer.controller");
+
+// Manager và Staff xem danh sách và chi tiết sản phẩm
+router.get(
+  "/products",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  productController.getProducts
+);
+router.post(
+  "/products",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  productController.createProduct
+);
+router.post(
+  "/products/bulk-import",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  productController.bulkImportProducts
+);
+router.get(
+  "/products/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  productController.getProductById
+);
+router.put(
+  "/products/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  productController.updateProduct
+);
+router.get(
+  "/categories",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  productController.getCategories
+);
+router.get(
+  "/brands",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  productController.getBrands
+);
+
+// Quản lý nhân sự: chỉ Manager
+router.get(
+  "/staff",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  staffController.getStaffList
+);
+router.post(
+  "/staff",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  staffController.createStaff
+);
+// Phải đặt trước "/staff/:userId" để "availability" không bị coi là mã nhân viên
+router.get(
+  "/staff/availability",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  staffController.checkAvailability
+);
+router.get(
+  "/staff/:userId",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  staffController.getStaffDetail
+);
+router.patch(
+  "/staff/:userId",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  staffController.updateStaff
+);
+router.patch(
+  "/staff/:userId/lock",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  staffController.lockStaff
+);
+router.patch(
+  "/staff/:userId/unlock",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  staffController.unlockStaff
+);
+
+// Khôi phục mật khẩu Admin: Manager và Staff
+router.post("/auth/forgot-password", passwordResetController.forgotPassword);
+router.post("/auth/verify-otp", passwordResetController.verifyOtp);
+router.post("/auth/reset-password", passwordResetController.resetPassword);
+router.post(
+  "/auth/change-password",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  passwordResetController.changePassword
+);
+
+// Xử lý đơn hàng: Staff thao tác, Manager chỉ xem
+router.get(
+  "/orders/cancel-reasons",
+  authMiddleware,
+  authMiddleware.requireRole("Staff", "Manager"),
+  orderController.getCancelReasons
+);
+router.post(
+  "/orders/bulk",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  orderController.bulkUpdate
+);
+router.post(
+  "/orders/labels",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  orderController.getLabels
+);
+router.get(
+  "/orders",
+  authMiddleware,
+  authMiddleware.requireRole("Staff", "Manager"),
+  orderController.getOrders
+);
+router.get(
+  "/orders/:orderId",
+  authMiddleware,
+  authMiddleware.requireRole("Staff", "Manager"),
+  orderController.getOrderDetail
+);
+router.patch(
+  "/orders/:orderId/confirm",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  orderController.confirmOrder
+);
+router.patch(
+  "/orders/:orderId/cancel",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  orderController.cancelOrder
+);
+router.patch(
+  "/orders/:orderId/hand-over",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  orderController.handOverOrder
+);
+
+router.get(
+  "/reviews",
+  authMiddleware,
+  authMiddleware.requireRole("Staff", "Manager"),
+  reviewController.getReviews
+);
+router.get(
+  "/reviews/:reviewId",
+  authMiddleware,
+  authMiddleware.requireRole("Staff", "Manager"),
+  reviewController.getReviewDetail
+);
+router.patch(
+  "/reviews/:reviewId/moderate",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  reviewController.moderateReview
+);
+router.post(
+  "/reviews/:reviewId/suggest-reply",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  reviewController.suggestReply
+);
+router.put(
+  "/reviews/:reviewId/draft",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  reviewController.saveDraft
+);
+router.post(
+  "/reviews/:reviewId/send",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  reviewController.sendReply
+);
+
+// ==========================================
+// HẬU MÃI & ĐỔI TRẢ (H.Ngọc)
+// Staff thao tác xử lý, Manager chỉ xem
+// ==========================================
+router.get(
+  "/returns",
+  authMiddleware,
+  authMiddleware.requireRole("Staff", "Manager"),
+  returnOrderController.getReturns
+);
+
+router.get(
+  "/returns/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Staff", "Manager"),
+  returnOrderController.getReturnDetail
+);
+
+router.post(
+  "/returns/:id/approve",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  returnOrderController.approveReturn
+);
+
+router.post(
+  "/returns/:id/reject",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  returnOrderController.rejectReturn
+);
+
+router.post(
+  "/returns/:id/accept-goods",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  returnOrderController.acceptGoods
+);
+
+router.post(
+  "/returns/:id/reject-goods",
+  authMiddleware,
+  authMiddleware.requireRole("Staff"),
+  returnOrderController.rejectGoods
+);
+
+// ==========================================
+// QUẢN LÝ KHUYẾN MÃI (PROMOTIONS)
+// Manager: xem, tạo, sửa, đổi trạng thái, xóa
+// Staff: chỉ được xem danh sách và chi tiết
+// ==========================================
+router.get(
+  "/promotions",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  promotionController.getPromotions
+);
+
+router.get(
+  "/promotions/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  promotionController.getPromotionById
+);
+
+router.post(
+  "/promotions",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  promotionController.createPromotion
+);
+
+router.put(
+  "/promotions/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  promotionController.updatePromotion
+);
+
+router.patch(
+  "/promotions/:id/status",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  promotionController.changePromotionStatus
+);
+
+router.delete(
+  "/promotions/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  promotionController.deletePromotion
+);
+
+// ==========================================
+// QUẢN LÝ KHÁCH HÀNG (CUSTOMER MANAGEMENT)
+// Manager và Staff: xem danh sách và chi tiết khách hàng
+// ==========================================
+router.get(
+  "/customers",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  customerController.getCustomers
+);
+
+router.get(
+  "/customers/:id",
+  authMiddleware,
+  authMiddleware.requireRole("Manager", "Staff"),
+  customerController.getCustomerById
+);
+
+// Khóa / Mở khóa tài khoản khách hàng: chỉ Manager
+router.patch(
+  "/customers/:id/lock",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  customerController.lockCustomer
+);
+
+router.patch(
+  "/customers/:id/unlock",
+  authMiddleware,
+  authMiddleware.requireRole("Manager"),
+  customerController.unlockCustomer
+);
+
+module.exports = router;
+
